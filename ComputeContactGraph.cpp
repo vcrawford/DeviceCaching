@@ -193,7 +193,7 @@ int main(int argc, char* argv[]) {
          if (contact[i][j] >= threshold) {
             output_strm << contact[i][j] << " ";
             if (i < j) {
-               plot_strm << " " << i << " -- " << j  << "[weight=" << 10*contact[i][j] 
+               plot_strm << " " << (i + 1) << " -- " << (j + 1)  << "[weight=" << 10*contact[i][j] 
                          << ", penwidth=" << 5*contact[i][j] << "]" << endl;
             }
          }
