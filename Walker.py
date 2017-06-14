@@ -1,4 +1,3 @@
-# A walker according to the SLAW movement model 
 
 import ClusterFractalPoints as cluster
 import FractalPoints as fractal
@@ -7,7 +6,60 @@ import numpy.random as nprand
 import matplotlib.pyplot as plt
 import binascii
 import os
+import math
 
+#Calculate the distance of each point to location
+def getDistances(points, location):
+   
+   distances = {}
+
+   for point in points:
+      distance = math.sqrt((point[0] - location[0])**2 + (point[1] - location[1])**2)
+      distances[point] = distance
+
+   return distances
+     
+
+# Pick a route for the walker to take, beginning with start_point, according to
+# the "Least Action Trip Planning" algorithm (LATP)
+# Assumes that points does not include start_point
+def getRoute(points, start_point):
+
+   # The route in order of visit
+   route = [start_point]
+
+   # To be added to the route
+   unrouted = points
+
+   # Add points to route until there are no more
+   while unrouted:
+
+      # Distances of all points to the point we just added
+      distances = getDistances(unrouted, route[-1])
+      distances_values = distances.values()
+      distances_inv_sum = sum([1.0/x for x in distances_values])
+
+      # Calculate probabilities for each point according to distances
+      probabilities = {x: (1.0/distances[x])/distances_inv_sum for x in distances.keys()}
+
+      random_number = rand.uniform(0, 1)
+      probability_sum = 0
+
+      for point, probability in probabilities.iteritems():
+
+         probability_sum = probability_sum + probability
+
+         if random_number <= probability_sum:
+            route.append(point)
+            unrouted.remove(point)
+            break
+
+   # End with the beginning
+   route.append(start_point)
+
+   return route 
+
+# A walker according to the SLAW movement model 
 class Walker:
 
    def __init__(self, waypoints, home):
@@ -18,6 +70,20 @@ class Walker:
       # The home waypoint of this walker (is in waypoints)
       self.home = home
 
+      # The current location of the walker
+      self.location = home
+
+   # Pick a route for the walker to take, starting and ending with home
+   # To make a route, the walker makes a sequence of its waypoints using the
+   # "Least Action Trip Planning" algorithm (LATP)
+   # Additional waypoints are some points to visit in addition to the ones randomly picked
+   def pickRoute(self, additionalWaypoints):
+
+      points = self.waypoints + additionalWaypoints
+      points.remove(self.home)
+
+      self.route = getRoute(points, self.home)
+        
 
 # Generate n random walkers
 # Each walker has 5 random clusters from each of which it picks 10% random waypoints
@@ -79,7 +145,18 @@ def randomWalkers(n, clusters, waypoints):
 if __name__ == '__main__':
    points = fractal.getFractalPoints(10000, 10000, 1000, 4)
    clusters = cluster.computeClusters(300, points)
-   walkers = randomWalkers(5, clusters, points)
+   walkers = randomWalkers(100, clusters, points)
+
+   extra_waypoints = []
+   points_indices = range(len(points))
+
+   for i in range(20):
+      random_point = points[nprand.choice(points_indices)]
+      if random_point not in extra_waypoints:
+         extra_waypoints.append(random_point)
+
+   #walkers[0].pickRoute(extra_waypoints)
+   walkers[0].pickRoute([])
 
    plt.axis([0, 10000, 0, 10000])
    plt.axis('off')
@@ -90,12 +167,16 @@ if __name__ == '__main__':
       random_color = binascii.hexlify(os.urandom(3))
       plt.plot(x, y, color = "#" + random_color, marker = '.', alpha=0.5, linewidth=0)
 
-   for walker in walkers:
-      x = [point[0] for point in walker.waypoints]
-      y = [point[1] for point in walker.waypoints]
-      random_color = binascii.hexlify(os.urandom(3))
-      plt.plot(x, y, color = "#" + random_color, marker = 'o', linewidth=0)
+   #for walker in walkers:
+   #   x = [point[0] for point in walker.waypoints]
+   #   y = [point[1] for point in walker.waypoints]
+   #   random_color = binascii.hexlify(os.urandom(3))
+   #   plt.plot(x, y, color = "#" + random_color, marker = 'o', linewidth=0)
 
+
+   for i, point in enumerate(walkers[0].route):
+      plt.plot(point[0], point[1], 'ro')
+      plt.annotate(str(i), xy = point)
 
    plt.savefig("fractal.png")
 
