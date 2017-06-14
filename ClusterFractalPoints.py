@@ -8,17 +8,16 @@ import matplotlib.pyplot as plt
 def searchForConnectedPoints(r, start_point, search_points):
 
    # Points we have found that are connected
-   connected = [start_point]
+   connected = set([start_point])
 
    # The points that we have queued to search the neighbors of
    # Should be a subset of connected
-   search_neighbors = [start_point]
+   search_neighbors = set([start_point])
 
    while search_neighbors:
 
       # Search the first element of search_neighbors
-      point_a = search_neighbors[0]
-      search_neighbors.remove(point_a)
+      point_a = search_neighbors.pop()
 
       # Look for neighbors
       for point_b in search_points:
@@ -30,8 +29,8 @@ def searchForConnectedPoints(r, start_point, search_points):
             continue
          elif (point_a[0] - point_b[0])**2 + (point_a[1] - point_b[1])**2 <= r**2:
             # New point that is within r distance
-            connected.append(point_b)
-            search_neighbors.append(point_b)
+            connected.add(point_b)
+            search_neighbors.add(point_b)
 
    return connected 
 
@@ -40,19 +39,19 @@ def searchForConnectedPoints(r, start_point, search_points):
 # are connected if they are within r distance of each other
 def computeClusters(r, points):
 
-   # array of arrays, each representing a cluster
+   # array of sets, each representing a cluster
    clusters = []
 
    # points that have not yet been put in a cluster
-   unclustered = points
+   unclustered = set(points)
 
    while unclustered:
 
       # Get cluster for this point
-      point = unclustered[0]
+      point = unclustered.pop()
       connected = searchForConnectedPoints(r, point, unclustered)
       clusters.append(connected)
-      unclustered = [x for x in unclustered if x not in connected]
+      unclustered = unclustered.difference(connected)
 
    return clusters
 

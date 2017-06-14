@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy.random as rand
 import math
 
-# Place (add coordinates to points) count points between x_min, y_min and x_max, y_max
+# Place (add coordinates to the set points) count points between x_min, y_min and x_max, y_max
 # level is the current level we are splitting the region into
 # levels is the maximum level that we want to go to before placing the points
 # Returns the number of points that were placed successfully
@@ -24,7 +24,7 @@ def addFractalPoints(x_min, x_max, y_min, y_max, points, levels, level, count):
       # No more splitting, time to place the points
       for i in range(count):
          point = rand.normal(mid, 0.5*beta)
-         points.append((point[0], point[1]))
+         points.add((point[0], point[1]))
          #points.append((rand.uniform(x_min, x_max), rand.uniform(y_min, y_max)))
 
       return count
@@ -61,7 +61,7 @@ def addFractalPoints(x_min, x_max, y_min, y_max, points, levels, level, count):
 def getFractalPoints(width, height, k, levels):
 
    # x and y coordinates, each a tuple
-   points = []
+   points = set()
 
    count = addFractalPoints(0, width, 0, height, points, levels, 1, k)
 

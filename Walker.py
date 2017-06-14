@@ -22,14 +22,15 @@ def getDistances(points, location):
 
 # Pick a route for the walker to take, beginning with start_point, according to
 # the "Least Action Trip Planning" algorithm (LATP)
-# Assumes that points does not include start_point
+# start_point is an element of points
 def getRoute(points, start_point):
 
    # The route in order of visit
    route = [start_point]
 
    # To be added to the route
-   unrouted = points
+   unrouted = set(points)
+   unrouted.remove(start_point)
 
    # Add points to route until there are no more
    while unrouted:
@@ -59,12 +60,43 @@ def getRoute(points, start_point):
 
    return route 
 
+# Pick a random cluster, and then pick a random 10% of its points
+# Clusters is a list of disjoint sets of points
+# Points is the set of points in all clusters
+def randomPointsRandomCluster(clusters):
+
+   points = set([x for cluster in clusters for x in cluster])
+
+   # Random point, which we will find the cluster of and that will be the random cluster
+   # Do it this way so that the probability of picking a cluster is according to its size
+   random_point = rand.sample(points, 1)[0]
+   cluster = [x for x in clusters if random_point in x][0]
+   cluster_count = len(cluster)
+	  
+   # Now pick 10% random points in this cluster
+   # Note that there is always at least one waypoint
+   cluster_random_points = set([random_point])
+   cluster_random_points_count = 0.10*cluster_count
+
+   while len(cluster_random_points) < cluster_random_points_count:
+      random_point = rand.sample(cluster, 1)[0]
+
+      if random_point not in cluster_random_points:
+         cluster_random_points.add(random_point)
+
+   return [cluster, cluster_random_points]
+
 # A walker according to the SLAW movement model 
 class Walker:
 
-   def __init__(self, waypoints, home):
+   def __init__(self, clusters, waypoints, home):
+
+      # The set of clusters this walker regularly visits
+      # Set of indices, not actual cluster points
+      self.clusters = clusters
 
       # A set of waypoints, or coordinates, that the walker regularly visits
+      # Each belongs to one of the clusters above
       self.waypoints = waypoints
 
       # The home waypoint of this walker (is in waypoints)
@@ -76,14 +108,18 @@ class Walker:
    # Pick a route for the walker to take, starting and ending with home
    # To make a route, the walker makes a sequence of its waypoints using the
    # "Least Action Trip Planning" algorithm (LATP)
-   # Additional waypoints are some points to visit in addition to the ones randomly picked
-   def pickRoute(self, additionalWaypoints):
+   # Clusters has all clusters, all points are in some cluster
+   def pickRoute(self, clusters):
 
-      points = self.waypoints + additionalWaypoints
-      points.remove(self.home)
+      # Choose random new points to go to
+      # Pick a random cluster and then 10% of its points=
+      unvisitedClusters = [clusters[i] for i in range(len(clusters)) if i not in self.clusters]
+      randomPoints = randomPointsRandomCluster(unvisitedClusters)[1]
 
-      self.route = getRoute(points, self.home)
-        
+      # So we want to visit the usual spots plus these random, new ones
+      self.route = getRoute(self.waypoints.union(randomPoints), self.home)
+      return
+
 
 # Generate n random walkers
 # Each walker has 5 random clusters from each of which it picks 10% random waypoints
@@ -95,48 +131,35 @@ def randomWalkers(n, clusters, waypoints):
    # Generate random waypoints and home points and build a walker
    for i in range(n):
       # Build the nth walker
-      
-      # Get 10% of waypoints from 5 random clusters
-      random_clusters = []
-      random_waypoints = []
 
-      while len(random_clusters) < 5:
+      # Input for walker constructor      
+      random_clusters_indices = set()
+      random_waypoints = set()
 
-         # Random waypoint, which we will find the cluster of and that will be the random cluster
-         # (Unless we've already chosen that cluster)
-         a = int(rand.uniform(0, len(waypoints) - 1))
-         random_waypoint = waypoints[a]
-         cluster_list = [x for x in clusters if random_waypoint in x and x not in random_clusters]
+      # Clusters and waypoints that we have not yet randomly sampled
+      unpicked_clusters = list(clusters)
 
-         if len(cluster_list) == 0:
-            # This waypoint corresponds to a cluster we've already chosen
-            continue
+      # Pick the 5 random clusters and their waypoints
+      for i in range(5):
 
-         # New cluster to add
-         cluster = cluster_list[0]
-         cluster_count = len(cluster)
-         random_clusters.append(cluster)
-                  
-         # Now pick 10% random waypoints in this cluster
-         # Note that there is always at least one waypoint
-         cluster_random_waypoints = [random_waypoint]
-         cluster_random_waypoints_count = 0.10*cluster_count
+         # Random cluster and its points
+         [cluster, points] = randomPointsRandomCluster(unpicked_clusters)
 
-         while len(cluster_random_waypoints) < cluster_random_waypoints_count:
-            a = int(rand.uniform(0, len(cluster) - 1))
-            random_waypoint = cluster[a]
+         # The index of this cluster in clusters
+         index = [i for i in range(len(clusters)) if cluster == clusters[i]][0]
 
-            if random_waypoint not in cluster_random_waypoints:
-               cluster_random_waypoints.append(random_waypoint)
+         # Add these for this walker
+         random_clusters_indices.add(index)
+         random_waypoints = random_waypoints.union(points)
 
-         # Add this cluster's random waypoints
-         random_waypoints.extend(cluster_random_waypoints)
-
+         # Don't want to pick from this cluster again
+         unpicked_clusters.remove(cluster)
+        
       # Just let home be the first random waypoint
-      home = random_waypoints[0]
+      home = rand.sample(random_waypoints, 1)[0]
 
       # Make walker
-      walkers.append(Walker(random_waypoints, home))
+      walkers.append(Walker(random_clusters_indices, random_waypoints, home))
 
    return walkers
 
@@ -147,16 +170,9 @@ if __name__ == '__main__':
    clusters = cluster.computeClusters(300, points)
    walkers = randomWalkers(100, clusters, points)
 
-   extra_waypoints = []
-   points_indices = range(len(points))
-
-   for i in range(20):
-      random_point = points[nprand.choice(points_indices)]
-      if random_point not in extra_waypoints:
-         extra_waypoints.append(random_point)
-
-   #walkers[0].pickRoute(extra_waypoints)
-   walkers[0].pickRoute([])
+   walkers[0].pickRoute(clusters)
+   walkers[1].pickRoute(clusters)
+   walkers[2].pickRoute(clusters)
 
    plt.axis([0, 10000, 0, 10000])
    plt.axis('off')
@@ -167,16 +183,17 @@ if __name__ == '__main__':
       random_color = binascii.hexlify(os.urandom(3))
       plt.plot(x, y, color = "#" + random_color, marker = '.', alpha=0.5, linewidth=0)
 
-   #for walker in walkers:
-   #   x = [point[0] for point in walker.waypoints]
-   #   y = [point[1] for point in walker.waypoints]
-   #   random_color = binascii.hexlify(os.urandom(3))
-   #   plt.plot(x, y, color = "#" + random_color, marker = 'o', linewidth=0)
-
-
    for i, point in enumerate(walkers[0].route):
       plt.plot(point[0], point[1], 'ro')
       plt.annotate(str(i), xy = point)
+
+   for i, point in enumerate(walkers[1].route):
+      plt.plot(point[0], point[1], 'bo')
+      plt.annotate(str(i), xy = point)
+
+   #for i, point in enumerate(walkers[2].route):
+   #   plt.plot(point[0], point[1], 'go')
+   #   plt.annotate(str(i), xy = point)
 
    plt.savefig("fractal.png")
 
