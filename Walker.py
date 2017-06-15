@@ -167,9 +167,9 @@ class Walker:
       route_magnitude = math.sqrt(route_vector[0]**2 + route_vector[1]**2)
       
       # We are close enough. Time to go to next place
-      if route_magnitude < self.speed + 0.001:
+      if route_magnitude < self.speed:
           # Wait time is pulled from a pareto distribution truncated between 30 and 10000 seconds
-          self.seconds_to_wait = int(max(30, min(nprand.pareto(0.3), 10000)))
+          self.seconds_to_wait = int(max(30, min(nprand.pareto(0.25), 10000)))
           self.route_step = self.route_step + 1
           return self.location
 

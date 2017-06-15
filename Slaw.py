@@ -11,6 +11,7 @@ import math
 import matplotlib.pyplot as plt
 import os
 import binascii
+import WalkerContact as wc
 
 # Variables
 area_side = 1000 # meters in each side of our area
@@ -70,6 +71,9 @@ for day in range(num_days):
       walker.setLocation(walker.home) # Move home any walkers that are not at home
       locations.append(walker.home)
 
+   # Initialize our contact data
+   walker_contact = wc.WalkerContact(locations)
+
    for second in range(86400):
 
       # Every day at 8am, the new routes are started
@@ -78,20 +82,24 @@ for day in range(num_days):
             walker.startRoute()
 
       # Print the current time to the command line
-      hours = second/(60*60)
-      minutes = second/(60)
-      second_display = second
-      if minutes > 0:
-         second_display = second_display % (60*minutes)
-      if hours > 0:
-         minutes = minutes%(60*hours)
-
-      sys.stdout.write("Day {}: {}:{}:{} \r".format(day+1, hours, minutes, second_display))
-      sys.stdout.flush()
+      if (second % 60 == 0):
+         hours = second/(60*60)
+         minutes = second/(60)
+         if hours > 0:
+            minutes = minutes%(60*hours)
+         sys.stdout.write("Day {}: {}:{} \r".format(day+1, hours, minutes))
+         sys.stdout.flush()
 
       for i, walker in enumerate(walkers):
          locations[i] = walker.updateLocation()
 
       # Update visualization
       vm.refreshProgram(locations)
+
+      # Update contact data
+      walker_contact.updateLocations(locations)
+
+   # Print this day's contact data
+   wc.printContactGraph(walker_contact, "slaw_contact.txt")
+
 
