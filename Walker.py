@@ -118,8 +118,50 @@ class Walker:
 
       # So we want to visit the usual spots plus these random, new ones
       self.route = getRoute(self.waypoints.union(randomPoints), self.home)
+
+      # Which route the walker moves to. Start at the beginning.
+      self.route_step = 0
+
+      # Walkers start out moving
+      self.seconds_to_wait = 0
+
       return
 
+   # Sets the location of the walker
+   # Does not change anything with the route
+   def setLocation(self, location):
+      self.location = location
+
+   # Computes the new location for the next second, assuming the walker is heading at 1 m/s to the next
+   # point on its route at any point in time
+   # Also pauses at each waypoint according to some distribution
+   def updateLocation(self):
+
+      # We are waiting at a waypoint
+      if self.seconds_to_wait > 0:
+         self.seconds_to_wait = self.seconds_to_wait - 1
+         return self.location
+
+      # We have completed our route
+      if self.route_step >= len(self.route):
+         return self.location
+
+      # Check if we are at our next stop
+      next_waypoint = self.route[self.route_step]
+      route_vector = (next_waypoint[0] - self.location[0], next_waypoint[1] - self.location[1])
+      route_magnitude = math.sqrt(route_vector[0]**2 + route_vector[1]**2)
+      
+      # We are close enough. Time to go to next place
+      if route_magnitude < 1.01:
+          self.seconds_to_wait = 10
+          self.route_step = self.route_step + 1
+          return self.location
+
+      # Move forward 1 m
+      self.location = (self.location[0] + (1.0/route_magnitude)*route_vector[0],
+                       self.location[1] + (1.0/route_magnitude)*route_vector[1])
+
+      return self.location
 
 # Generate n random walkers
 # Each walker has 5 random clusters from each of which it picks 10% random waypoints
