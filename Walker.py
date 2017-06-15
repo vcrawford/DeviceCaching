@@ -89,7 +89,7 @@ def randomPointsRandomCluster(clusters):
 # A walker according to the SLAW movement model 
 class Walker:
 
-   def __init__(self, clusters, waypoints, home):
+   def __init__(self, clusters, waypoints, home, speed):
 
       # The set of clusters this walker regularly visits
       # Set of indices, not actual cluster points
@@ -104,6 +104,10 @@ class Walker:
 
       # The current location of the walker
       self.location = home
+
+      # The number of meters that the walker will travel every time 
+      # update location is called (which should be called every "second")
+      self.speed = speed
 
    # Pick a route for the walker to take, starting and ending with home
    # To make a route, the walker makes a sequence of its waypoints using the
@@ -125,6 +129,9 @@ class Walker:
       # Walkers start out moving
       self.seconds_to_wait = 0
 
+      # Don't start route until this is set to true
+      self.route_started = False
+
       return
 
    # Sets the location of the walker
@@ -132,18 +139,26 @@ class Walker:
    def setLocation(self, location):
       self.location = location
 
+   # Get the walker to start moving on its route
+   def startRoute(self):
+      self.route_started = True
+
    # Computes the new location for the next second, assuming the walker is heading at 1 m/s to the next
    # point on its route at any point in time
    # Also pauses at each waypoint according to some distribution
    def updateLocation(self):
 
-      # We are waiting at a waypoint
-      if self.seconds_to_wait > 0:
-         self.seconds_to_wait = self.seconds_to_wait - 1
+      # Don't move if route not started yet
+      if not self.route_started:
          return self.location
 
       # We have completed our route
       if self.route_step >= len(self.route):
+         return self.location
+
+      # We are waiting at a waypoint
+      if self.seconds_to_wait > 0:
+         self.seconds_to_wait = self.seconds_to_wait - 1
          return self.location
 
       # Check if we are at our next stop
@@ -152,21 +167,23 @@ class Walker:
       route_magnitude = math.sqrt(route_vector[0]**2 + route_vector[1]**2)
       
       # We are close enough. Time to go to next place
-      if route_magnitude < 1.01:
-          self.seconds_to_wait = 10
+      if route_magnitude < self.speed + 0.001:
+          # Wait time is pulled from a pareto distribution truncated between 30 and 10000 seconds
+          self.seconds_to_wait = int(max(30, min(nprand.pareto(0.3), 10000)))
           self.route_step = self.route_step + 1
           return self.location
 
-      # Move forward 1 m
-      self.location = (self.location[0] + (1.0/route_magnitude)*route_vector[0],
-                       self.location[1] + (1.0/route_magnitude)*route_vector[1])
+      # Move forward along vector speed distance
+      move_distance = self.speed*(1.0/route_magnitude)
+      self.location = (self.location[0] + move_distance*route_vector[0],
+                       self.location[1] + move_distance*route_vector[1])
 
       return self.location
 
 # Generate n random walkers
 # Each walker has 5 random clusters from each of which it picks 10% random waypoints
 # Randomly picks a home point from among these waypoints
-def randomWalkers(n, clusters, waypoints):
+def randomWalkers(n, clusters, waypoints, speed):
 
    walkers = []
 
@@ -201,7 +218,7 @@ def randomWalkers(n, clusters, waypoints):
       home = rand.sample(random_waypoints, 1)[0]
 
       # Make walker
-      walkers.append(Walker(random_clusters_indices, random_waypoints, home))
+      walkers.append(Walker(random_clusters_indices, random_waypoints, home, speed))
 
    return walkers
 
@@ -210,7 +227,7 @@ def randomWalkers(n, clusters, waypoints):
 if __name__ == '__main__':
    points = fractal.getFractalPoints(10000, 10000, 1000, 4)
    clusters = cluster.computeClusters(300, points)
-   walkers = randomWalkers(100, clusters, points)
+   walkers = randomWalkers(100, clusters, points, 1.0)
 
    walkers[0].pickRoute(clusters)
    walkers[1].pickRoute(clusters)

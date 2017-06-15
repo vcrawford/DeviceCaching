@@ -56,9 +56,10 @@ def computeClusters(r, points):
    return clusters
 
 if __name__ == "__main__":
-   points = fractal.getFractalPoints(10000, 10000, 1000, 4)
-   clusters = computeClusters(200, points)
-   plt.axis([0, 10000, 0, 10000])
+
+   points = fractal.getFractalPoints(1000, 1000, 1500, 5)
+   clusters = computeClusters(20, points)
+   plt.axis([0, 1000, 0, 1000])
    plt.axis('off')
 
    for cluster in clusters:
