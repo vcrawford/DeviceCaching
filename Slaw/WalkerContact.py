@@ -13,13 +13,11 @@ def printContactGraph(walker_contact, filename):
 
    contact_file = open(filename, 'w')
 
-   # The sum of contact events is the diagonal, since a device is always in contact
-   # with itself
-   contact_sum = walker_contact.contact[0][0]
+   max_contacts = walker_contact.contact[0][0]
 
    for i in walker_contact.walkers:
       for j in walker_contact.walkers:
-         contact_value = walker_contact.contact[i][j]/contact_sum
+         contact_value = walker_contact.contact[i][j]/max_contacts
          contact_file.write("{} ".format(contact_value))
       contact_file.write("\n")
 
@@ -35,6 +33,8 @@ class WalkerContact:
    # locations is a list that takes the ith walker to its location
    def __init__(self, locations):
 
+      # Keep track of locations so we only have to check contact for devices that
+      # have moved
       self.locations = locations
       self.walkers = range(len(self.locations)) # save this to just make everything simpler
 
@@ -43,22 +43,23 @@ class WalkerContact:
       num_walkers = len(self.walkers)
       self.contact = np.zeros((num_walkers, num_walkers))
 
-      # Update the location for every walker
+      # Find who is in contact
       self.updateContact(self.walkers)
 
    # An array of new locations for every walker
    def updateLocations(self, new_locations):
 
-      # Walkers that we have found are moved
-      moved = []
+      #self.update_count = self.update_count + 1
 
-      for i in self.walkers:
-         if self.locations[i] != new_locations[i]:
-            moved.append(i)
+      # Walkers that we have found are moved
+      #moved = []
+
+      #for i in self.walkers:
+      #   if self.locations[i] != new_locations[i]:
+      #      moved.append(i)
 
       self.locations = new_locations
-      self.updateContact(moved)
-      
+      self.updateContact(self.walkers)
 
    # Update contact data for contact involving the walkers
    # Increments the contact between walkers by 1 if they are in contact
@@ -82,8 +83,8 @@ class WalkerContact:
                self.contact[i][j] = self.contact[i][j] + 1
 
                # Only increment if j not in walkers, otherwise will be incremented twice
-               if j not in walkers:
-                  self.contact[j][i] = self.contact[j][i] + 1
+               #if j not in walkers:
+               #   self.contact[j][i] = self.contact[j][i] + 1
 
 
 if __name__ == "__main__":

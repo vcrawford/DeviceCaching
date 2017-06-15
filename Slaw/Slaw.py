@@ -99,7 +99,8 @@ for day in range(num_days):
       # Update contact data
       walker_contact.updateLocations(locations)
 
-   # Print this day's contact data
-   wc.printContactGraph(walker_contact, "slaw_contact.txt")
+      if second%(60*60) == 0:
+         # Print this hour's contact data
+         wc.printContactGraph(walker_contact, "slaw_contact.txt")
 
 
