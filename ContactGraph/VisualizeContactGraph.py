@@ -1,11 +1,12 @@
 # Take a contact graph file and output dot file visualizing it
-# Call like python VisualizeContact.py contact.txt contact.dot
+# Call like python VisualizeContact.py contact.txt contact.dot 0.01
 
 import sys
 import subprocess
 
 contact_data = sys.argv[1]
 output_file = sys.argv[2]
+min_edge_weight = float(sys.argv[3])
 
 output = open(output_file, 'w')
 data_in = open(contact_data, 'r')
@@ -25,9 +26,8 @@ for line in data_in:
    for value in values:
 
       # Only need 1/2 of the contact since it is symmetric
-      if node_i < node_j and float(value) > 0:
+      if node_i < node_j and float(value) > min_edge_weight:
          output.write("{} -- {} [penwidth={}] \n".format(node_i, node_j, value))
-      
       node_j = node_j + 1
 
    node_i = node_i + 1
