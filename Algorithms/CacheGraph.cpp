@@ -41,6 +41,13 @@ class CacheGraph {
          for (int i = 0; i < this->graph.getNodeCount(); i++) {
             this->cache_nodes.push_back(false);
          }
+
+         // compute this->small_gamma for cache_nodes
+         this->computeSmallGamma();
+
+         // compute this->big_gamma using this->small_gamma for cache_nodes
+         this->computeBigGamma();
+
       }
 
       // Add a node to the cache nodes
@@ -49,14 +56,15 @@ class CacheGraph {
       // the previous cache_nodes
       void addCacheNode(int& node) {
 
-         vector<float> delta_small_gamma;
+         map<int, float> delta_small_gamma;
          this->computeDeltaSmallGamma(node, delta_small_gamma);
 
          float delta_big_gamma;
          delta_big_gamma = this->computeDeltaBigGamma(delta_small_gamma);
 
-         for (int i = 0; i < delta_small_gamma.size(); i++) {
-            this->small_gamma[i] = this->small_gamma[i] + delta_small_gamma[i];
+         // Set new values using the deltas
+         for (auto it = delta_small_gamma.begin(); it != delta_small_gamma.end(); it++) {
+            this->small_gamma[it->first] = this->small_gamma[it->first] + it->second;
          }
 
          this->big_gamma = this->big_gamma + delta_big_gamma;
@@ -126,30 +134,35 @@ class CacheGraph {
       }
 
       // Compute how much small_gamma will change if new_cache_node is added to the cache nodes
-      // store in delta_small_gamma
+      // store in delta_small_gamma as map from the node to the change
+      // only contains entries for nodes that not change
       // Does not store anything in any member functions!!!
-      void computeDeltaSmallGamma(const int& new_cache_node, vector<float>& delta_small_gamma) {
+      void computeDeltaSmallGamma(const int& new_cache_node, map<int, float>& delta_small_gamma) {
 
          delta_small_gamma.clear();
 
-         for (int i = 0; i < this->graph.getNodeCount(); i++) {
+         if (this->isCached(new_cache_node)) {
+            // nothing will change
+            return;
+         }
 
-            if (this->isCached(new_cache_node)) {
-               // If new_cache_node is already cached, should have no effect
-               delta_small_gamma.push_back(0);
+         // the newly added node will have its small gamma go to 1
+         delta_small_gamma[new_cache_node] = 1 - this->small_gamma[new_cache_node];
+
+
+         // Go through new_cache_node's neighbors, which are the only things that could
+         // have their small gamma changed
+         unordered_set<int> neighbors;
+         this->graph.getNeighbors(new_cache_node, neighbors);
+
+         for (auto it = neighbors.begin(); it != neighbors.end(); it++) {
+
+            // Only impact neighbors that are not cached
+            if (!this->isCached(*it)) {
+               delta_small_gamma[*it] = this->graph.getEdgeWeight(*it, new_cache_node)*(1 - small_gamma[*it]);
+            
             }
-            else if (i == new_cache_node) {
-               // Its probability will go to 1
-               delta_small_gamma.push_back(1 - this->small_gamma[i]);
-            }
-            else if (this->graph.areNeighbors(i, new_cache_node)) {
-                
-               delta_small_gamma.push_back(this->graph.getEdgeWeight(i, new_cache_node)*(1 - small_gamma[i]));
-            }
-            else {
-               // If i is not the new node, nor shares an edge with it
-               delta_small_gamma.push_back(0);
-            }
+
          }
 
       }
@@ -157,9 +170,17 @@ class CacheGraph {
       // Compute how much big_gamma will change if small_gamma is changed by delta_small_gamma
       // Does not store anything in any member functions!!!
       // Relies on delta_small_gamma being accurate
-      float computeDeltaBigGamma(const vector<float>& delta_small_gamma) {
+      float computeDeltaBigGamma(const map<int, float>& delta_small_gamma) {
 
-         return 0;
+         float delta_big_gamma = 0;
+
+         for (auto it = delta_small_gamma.begin(); it != delta_small_gamma.end(); it++) {
+
+            delta_big_gamma = delta_big_gamma + it->second;
+         }
+
+         return (1.0/this->graph.getNodeCount())*delta_big_gamma;
+
       }
 
 
