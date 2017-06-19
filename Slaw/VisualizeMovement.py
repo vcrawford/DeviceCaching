@@ -1,94 +1,46 @@
-from OpenGL.GL import *
-from OpenGL.GLUT import *
-from OpenGL.GLU import *
-import numpy as np
-import math as m
+# Functions to visualize the Slaw Instance
 
-# size of our (square) window
-window_side = 1000
+import SlawInstance as si
+import binascii
+import matplotlib.pyplot as plt
+import OpenGLInterface as opengl
+import os
+import random as rand
 
-# values for drawing the circles
-precision = 20.0
-radius = 10.0
-point_range = 1000
-colors = []
+# Make a matplotlib that shows the locations of the fractal points in the slaw instance
+# Each cluster has a random color assigned to it
+# Output the image to file with name filename
+def fractalPointsImage(slaw_instance, filename):
 
-# Get points for a circle in order to draw
-# center is the location on the screen
-# precision determines how round the circle will appear (since it's really a polygon)
-def circlePoints(center):
+  for cluster in slaw_instance.fractal_clusters:
+     x = [point[0] for point in cluster]
+     y = [point[1] for point in cluster]
+     random_color = binascii.hexlify(os.urandom(3))
+     plt.plot(x, y, color = "#" + random_color, marker = 'o', linewidth=0)
 
-   points = []
-   for angle in np.linspace(0, 2*np.pi, precision):
+  plt.axis([0, slaw_instance.area_side, 0, slaw_instance.area_side])
+  plt.axis('off')
 
-      point = radius*np.array([m.cos(angle), m.sin(angle)])
+  plt.savefig(filename)
 
-      points.append(point + center)
- 
-   return points 
+# intitialize the opengl instance that will visualize the walker movement
+def initializeVisualization(slaw_instance):
 
-# Draw a circle at x,y with radius radius, and RGB color color
-def drawCircle(x, y, color = (1.0, 1.0, 1.0)):
+  # All walkers get a random color for the visualization
+  colors = []
 
-   glBegin(GL_POLYGON) #start drawing
+  for walker in slaw_instance.walkers:
+     colors.append((rand.uniform(0, 1), rand.uniform(0, 1), rand.uniform(0, 1)))
 
-   points = circlePoints([x, y])
+  # Start window that will show walkers
+  opengl.colors = colors
+  opengl.precision = 10.0
+  opengl.radius = 5.0
+  opengl.point_range = slaw_instance.area_side
+  opengl.startVisualization("Slaw Device Movement")
 
-   glColor3f(color[0], color[1], color[2])
+# Updates the opengl image to have the current locations
+def updateVisualization(slaw_instance):
 
-   for point in points:
-      glVertex2f(point[0], point[1])
-
-   glEnd() #done drawing
-
-
-# Call this each time you want update the visualization
-# for new points
-def refreshProgram(points):
-
-   # Scale down points to fit in our window
-   convert_rate = float(window_side)/point_range
-   converted_points = [(convert_rate*x, convert_rate*y) for (x, y) in points]
-
-   #clear window, reset appearance
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-   glLoadIdentity()
-   refresh2D()
-
-
-   for i, point in enumerate(converted_points):
-      if len(colors) <= i:
-         drawCircle(point[0], point[1], (1.0, 1.0, 1.0))
-      else:
-         drawCircle(point[0], point[1], colors[i])
-
-   #Not sure why, just have to do this
-   glutSwapBuffers() 
-
-# Makes our window have 2d appearance
-def refresh2D():
-
-   glViewport(0, 0, window_side, window_side)
-   glMatrixMode(GL_PROJECTION)
-   glLoadIdentity()
-   glOrtho(0.0, window_side, 0.0, window_side, 0.0, 1.0)
-   glMatrixMode(GL_MODELVIEW)
-   glLoadIdentity()
-
-# Initialize the visualization
-# The window will have name name
-# Will repeatedly call func_call
-def startVisualization(name):
-   #Initialize display stuff
-   glutInit()
-   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH)
-   glutInitWindowSize(window_side, window_side) #set window size
-   glutInitWindowPosition(0, 0) #set window location
-   window = glutCreateWindow(name) #make window
-
-   #glutIdleFunc(refreshProgram)
-
-   #glutMainLoop() #start!
-
-
+   opengl.refreshProgram(slaw_instance.locations)
 

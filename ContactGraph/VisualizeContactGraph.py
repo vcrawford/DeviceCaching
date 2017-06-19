@@ -1,5 +1,5 @@
 # Take a contact graph file and output dot file visualizing it
-# Call like python VisualizeContact.py contact.txt contact.dot 0.01
+# Call like python VisualizeContact.py contact.txt contact.dot 0.01 greedy.txt
 
 import sys
 import subprocess
@@ -7,6 +7,15 @@ import subprocess
 contact_data = sys.argv[1]
 output_file = sys.argv[2]
 min_edge_weight = float(sys.argv[3])
+
+cache_nodes = [];
+
+if (len(sys.argv) > 4):
+   cache_in = open(sys.argv[4])
+   cache_nodes = cache_in.readline().split(",")
+   cache_nodes = [int(x) for x in cache_nodes]
+
+print cache_nodes
 
 output = open(output_file, 'w')
 data_in = open(contact_data, 'r')
@@ -31,6 +40,11 @@ for line in data_in:
       node_j = node_j + 1
 
    node_i = node_i + 1
+
+# Color cache nodes
+for i in range(node_i):
+   if i in cache_nodes:
+      output.write("{} [fillcolor=pink]".format(i))
 
 output.write("} \n")
 output.close()

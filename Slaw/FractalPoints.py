@@ -8,7 +8,7 @@ import math
 # level is the current level we are splitting the region into
 # levels is the maximum level that we want to go to before placing the points
 # Returns the number of points that were placed successfully
-def addFractalPoints(x_min, x_max, y_min, y_max, points, levels, level, count):
+def addFractalPoints(x_min, x_max, y_min, y_max, points, levels, level, count, total_count):
 
    if count == 0 or x_min >= x_max or y_min >= y_max:
       # impossible space to place them on, or no points
@@ -37,7 +37,7 @@ def addFractalPoints(x_min, x_max, y_min, y_max, points, levels, level, count):
    # Randomly determine how the total number of points will be distributed
    # amongst the squares
    # alpha is the deviation
-   alpha = 200.0/2**(0.8*level) #20.0/2**(0.8*level)
+   alpha = 0.1*total_count/2**(0.8*level) #20.0/2**(0.8*level)
    # sample 4 values, one for each square
    count_samp = rand.normal(count/4.0, alpha, 4)
 
@@ -49,10 +49,10 @@ def addFractalPoints(x_min, x_max, y_min, y_max, points, levels, level, count):
    count_samp_norm = [int(max(0, round(count*x/count_sum))) for x in count_samp]
 
    # Place points on the smaller squares
-   p1 = addFractalPoints(x_min, mid_samp[0], y_min, mid_samp[1], points, levels, level + 1, count_samp_norm[0])
-   p2 = addFractalPoints(x_min, mid_samp[0], mid_samp[1], y_max, points, levels, level + 1, count_samp_norm[1])
-   p3 = addFractalPoints(mid_samp[0], x_max, y_min, mid_samp[1], points, levels, level + 1, count_samp_norm[2])
-   p4 = addFractalPoints(mid_samp[0], x_max, mid_samp[1], y_max, points, levels, level + 1, count_samp_norm[3])
+   p1 = addFractalPoints(x_min, mid_samp[0], y_min, mid_samp[1], points, levels, level + 1, count_samp_norm[0], total_count)
+   p2 = addFractalPoints(x_min, mid_samp[0], mid_samp[1], y_max, points, levels, level + 1, count_samp_norm[1], total_count)
+   p3 = addFractalPoints(mid_samp[0], x_max, y_min, mid_samp[1], points, levels, level + 1, count_samp_norm[2], total_count)
+   p4 = addFractalPoints(mid_samp[0], x_max, mid_samp[1], y_max, points, levels, level + 1, count_samp_norm[3], total_count)
 
    return p1 + p2 + p3 + p4
 
@@ -63,7 +63,7 @@ def getFractalPoints(width, height, k, levels):
    # x and y coordinates, each a tuple
    points = set()
 
-   count = addFractalPoints(0, width, 0, height, points, levels, 1, k)
+   count = addFractalPoints(0, width, 0, height, points, levels, 1, k, k)
 
    print "{} points added".format(count)
 

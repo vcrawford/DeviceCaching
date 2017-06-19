@@ -109,6 +109,9 @@ class Walker:
       # update location is called (which should be called every "second")
       self.speed = speed
 
+      # Doesn't yet have any route
+      self.route = []
+
    # Pick a route for the walker to take, starting and ending with home
    # To make a route, the walker makes a sequence of its waypoints using the
    # "Least Action Trip Planning" algorithm (LATP)

@@ -49,15 +49,6 @@ class WalkerContact:
    # An array of new locations for every walker
    def updateLocations(self, new_locations):
 
-      #self.update_count = self.update_count + 1
-
-      # Walkers that we have found are moved
-      #moved = []
-
-      #for i in self.walkers:
-      #   if self.locations[i] != new_locations[i]:
-      #      moved.append(i)
-
       self.locations = new_locations
       self.updateContact(self.walkers)
 
@@ -82,19 +73,5 @@ class WalkerContact:
                # These devices are in contact
                self.contact[i][j] = self.contact[i][j] + 1
 
-               # Only increment if j not in walkers, otherwise will be incremented twice
-               #if j not in walkers:
-               #   self.contact[j][i] = self.contact[j][i] + 1
 
-
-if __name__ == "__main__":
-   
-   locations = [(1.0, 3.0), (2.0, 2.0)]
-   contact = WalkerContact(locations)
-
-   print contact.contact
-
-   contact.updateLocations([(100.0, 3), (2.0, 9)])
-
-   print contact.contact
 
