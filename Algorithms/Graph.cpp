@@ -18,8 +18,8 @@ class Graph {
       // edge between the ith and jth nodes
       vector< vector<float> > edge_matrix;
 
-      // vector that takes the ith node to an unordered_set of its neighbors
-      vector< unordered_set<int> > neighbors;
+      // vector that takes the ith node to a vector of its neighbors
+      vector< vector<int> > neighbors;
 
       // Empty graph
       Graph() {}
@@ -66,34 +66,37 @@ class Graph {
 
          this->neighbors.clear();
 
-         for (int i = 0; i < this->edge_matrix.size(); i++) {
+         vector<int> node_neighbors;
+
+         for (int i = 0; i < this->getNodeCount(); i++) {
             // Looking at neighbors of the ith node
+            node_neighbors.clear();
 
-            unordered_set<int> node_neighbors;
-
-            for (int j = 0; j < this->edge_matrix[0].size(); j++) {
+            for (int j = 0; j < this->getNodeCount(); j++) {
 
                if (this->edge_matrix[i][j] > 0) {
                   // j is a neighbor
-
-                  node_neighbors.insert(j);
+                  node_neighbors.push_back(j);
                }
             }
 
             this->neighbors.push_back(node_neighbors);
+
          }
+
+
       }
 
       // prints the neighbors data to the screen
-      void printNeighbors() {
+      void printNeighbors() const {
 
          for (int i = 0; i < this->neighbors.size(); i++) {
 
             cout << setw(5) << i << ": ";
 
-            for (auto it = this->neighbors[i].begin(); it != this->neighbors[i].end(); ++it) {
+            for (int j = 0; j < this->neighbors[i].size(); ++j) {
 
-               cout << setw(5) << *it;
+               cout << setw(5) << this->neighbors[i][j];
             }
 
             cout << endl;
@@ -102,34 +105,34 @@ class Graph {
       }
 
       // Gets the neighbors of node and puts them in neighbors
-      void getNeighbors(const int& node, unordered_set<int>& neighbors) {
+      void getNeighbors(const int& node, vector<int>& neighbors) const {
 
          neighbors = this->neighbors[node];
 
       }
 
       // Return the weight of the edge between node i and node j
-      float getEdgeWeight(const int& i, const int& j) {
+      float getEdgeWeight(const int& i, const int& j) const {
 
          return this->edge_matrix[i][j];
       }
 
       // Checks whether node i and node j are neighbors
-      bool areNeighbors(const int& i, const int& j) {
+      bool areNeighbors(const int& i, const int& j) const {
 
          return (this->edge_matrix[i][j] > 0);
 
       }
 
       // Get the count of nodes in the graph
-      int getNodeCount() {
+      int getNodeCount() const {
 
          return this->edge_matrix.size();
 
       }
 
       // Print a Graph object to a screen
-      void print() {
+      void print() const {
 
          for (int i = 0; i < this->edge_matrix.size(); i++) {
 
