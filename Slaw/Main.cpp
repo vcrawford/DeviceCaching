@@ -6,8 +6,11 @@
 #include <list>
 #include <queue>
 #include <unordered_set>
+#include <map>
+#include "SlawRandom.cpp"
 #include "FractalPoints.cpp"
 #include "ClusterFractalPoints.cpp"
+#include "Walker.cpp"
 
 using namespace std;
 
@@ -21,6 +24,15 @@ int main() {
    // Get fractal points for 1000 by 1000 m area
    vector< pair<int, int> > points;
    cout << getFractalPoints(1000, 1000, 2000, 5, points) << " fractal points have been generated "<< endl;
+
+   // Test that all fractal points are unique
+   for (int i = 0; i < points.size(); i++) {
+      for (int j = 0; j < points.size(); j++) {
+         if ((points[i] == points[j]) && (i != j)) {
+            cout << "Repeated fractal points!" << endl;
+         }
+      }
+   }
 
    // Cluster the fractal points
    int fractal_radius = 20;
@@ -49,9 +61,58 @@ int main() {
       for (int j = 0; j < clusters[i].size(); j++) {
 
          fractal_points_strm << clusters[i][j].first << "," << clusters[i][j].second << endl;
+         //cout << clusters[i][j].first << "," << clusters[i][j].second << endl;
       } 
 
    }
 
+   cout << "Generating random walkers ..." << endl; 
+   int speed = 1;
+   SlawRandom rand (clusters, points);
+
+   // test the random generator
+
+   ofstream random_stream;
+   random_stream.open("random_points.txt");
+
+   // WORKS
+   //for (int i = 0; i < 100; i++) {
+   //   pair<int, int> random_point;
+   //   rand.getRandomPoint(random_point);
+   //   random_stream << random_point.first << "," << random_point.second << endl;
+   //}
+
+   // WORKS
+   //int cl;
+   //rand.getRandomCluster(cl);
+   //for (int i = 0; i < clusters[cl].size(); i++) {
+   //   random_stream << clusters[cl][i].first << "," << clusters[cl][i].second << endl;
+   //}
+
+   // WORKS
+   //int cl;
+   //rand.getRandomCluster(cl);
+   //vector< pair<int, int> > picked;
+   //rand.getRandomPointsInCluster(cl, picked);
+   //for (int i = 0; i < picked.size(); i++) {
+   //   random_stream << picked[i].first << "," << picked[i].second << endl;
+   //}
+
+   Walker w (clusters, points, speed, rand);
+
+   //WORKS
+   //for (int i = 0; i < w.clusters.size(); i++) {
+   //   int a = w.clusters[i];
+   //   for (int j = 0; j < clusters[a].size(); j++) {
+   //      pair<int, int> b = clusters[a][j];
+   //      random_stream << b.first << "," << b.second << endl;
+   //   }
+   //}
+
+   // WORKDS
+   //for (int i = 0; i < w.waypoints.size(); i++) {
+
+   //   random_stream << w.waypoints[i].first << "," << w.waypoints[i].second << endl;
+   //}
 }
 
