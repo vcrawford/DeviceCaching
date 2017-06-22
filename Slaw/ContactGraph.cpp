@@ -25,6 +25,8 @@ int main(int agrc, char* argv[]) {
    vector< vector <float> > contact_graph; // ith, jth entry is the time the ith device has been in contact with the
                                            // jth device over the entire simulation
 
+   cout << "Generating contact data for " << node_count << " devices ..." << endl;
+
    // From the first second data, get locations, add blank maps to in_contact, and fill in contact_graph
    // with 0s
    string line;
@@ -105,6 +107,9 @@ int main(int agrc, char* argv[]) {
    }
 
    contact_data_file.close();
+
+   cout << "Contact graph written to file." << endl;
 }
+
 
 

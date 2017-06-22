@@ -76,9 +76,10 @@ int main(int argc, char* argv[]) {
    // Run simulation
    int days = atoi(argv[2]);
    int route_start = atoi(argv[3]);
+   int total_time = days*86400;
 
    cout << "Running movement for " << days << " day(s) where routes start at hour "
-        << route_start << " of each day ..." << endl;
+        << route_start << " of each day ..."  << endl;
 
 
    ofstream walker_locations;
@@ -86,13 +87,15 @@ int main(int argc, char* argv[]) {
 
    for (int day = 0; day < days; day++) {
 
-      for (int i = 0; i < walker_count; i++) {
-
-         walkers[i].pickRoute();
-      }
-
-
       for (int second = 0; second < 86400; second++) {
+
+         if (second == route_start*60*60) {
+
+            for (int i = 0; i < walker_count; i++) {
+
+               walkers[i].pickRoute();
+            }
+         }
 
          for (int i = 0; i < walker_count; i++) {
 
@@ -100,8 +103,11 @@ int main(int argc, char* argv[]) {
             walker_locations << walkers[i].location.first << " "
                              << walkers[i].location.second << endl;
          }
+
+         cout << "\r" << (int) 100*(day*86400 + second)/total_time << "%" << flush;
       }
    }
 
+   cout << endl;
 }
 
