@@ -81,7 +81,7 @@ if __name__ == "__main__":
          sys.stdout.write("Day {}: {}:{} \r".format(day, hours, minutes))
          sys.stdout.flush()
 
-      [x, y] = line.split(",")
+      [x, y] = line.split(" ")
 
       x = int(float(x));
       y = int(float(y));

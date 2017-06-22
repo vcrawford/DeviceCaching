@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
          for (int i = 0; i < walker_count; i++) {
 
             walkers[i].updateLocation();
-            walker_locations << walkers[i].location.first << ","
+            walker_locations << walkers[i].location.first << " "
                              << walkers[i].location.second << endl;
          }
       }

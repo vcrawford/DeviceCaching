@@ -116,12 +116,12 @@ class Walker {
       this->route_step = 1;
    }
 
-   // Pick 5 random clusters that this walker will visit
+   // Pick 4 random clusters that this walker will visit
    void pickClusters() {
 
       this->clusters.clear();
 
-      while (this->clusters.size() < 5) {
+      while (this->clusters.size() < 4) {
 
          int random_cluster;
          bool is_new;

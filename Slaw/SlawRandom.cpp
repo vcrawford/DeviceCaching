@@ -29,7 +29,7 @@ class SlawRandom {
 
    SlawRandom (vector< vector < pair <int, int> > >& clusters, vector< pair<int, int> >& waypoints)
                : clusters(clusters), waypoints(waypoints), generator(time(NULL)), uniform_0_1 (0,1),
-                 uniform_point (0, waypoints.size() - 1), exponential (0.25) {
+                 uniform_point (0, waypoints.size() - 1), exponential (0.4) {
 
       
       for (int i = 0; i < clusters.size(); i++) {
@@ -42,7 +42,7 @@ class SlawRandom {
    // Get number of seconds to wait, sampled from a pareto distribution with min 30 and max
    int getWait() {
 
-      return (int) min(30*exp( this->exponential (this->generator) ), (float) 10000);
+      return (int) min(30*exp( this->exponential (this->generator) ), (float) 5000);
    }
 
    // Pick a random cluster according to its size
@@ -72,7 +72,7 @@ class SlawRandom {
    void getRandomPointsInCluster(const int& cluster, vector< pair<int, int> >& picked) {
 
       // add num_waypoints to new_waypoints
-      int num_waypoints = ceil(0.1*this->clusters[cluster].size());
+      int num_waypoints = ceil(0.06*this->clusters[cluster].size());
 
       while (picked.size() < num_waypoints) {
 
