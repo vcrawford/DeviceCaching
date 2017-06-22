@@ -32,7 +32,7 @@ void getRoute(const vector< pair<int, int> >& points, const pair<int, int>& star
    route.push_back(start_point);
 
    // Remaining points to be routed
-   list< pair<int, int> > unrouted (route.begin(), route.end());
+   list< pair<int, int> > unrouted (points.begin(), points.end());
    unrouted.remove(start_point);
 
    // Add points to route until there are no more

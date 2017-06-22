@@ -33,8 +33,10 @@ void searchForConnectedPoints(const int& r, const pair<int, int>& start_point,
          float distance_sq = pow(point_a.first - point_b.first, 2) +
                              pow(point_a.second - point_b.second, 2);
 
-         if (distance_sq <= pow(r, 2)) {
+         if ((distance_sq <= pow(r, 2)) && (distance_sq != 0)) {
             // New point that is connected
+            // Need to make sure it's not the same point, since there are a
+            // few repeats in points
             connected_points.push_back(point_b);
             search_neighbors.push(point_b);
             it = not_connected.erase(it);
