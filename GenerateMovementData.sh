@@ -5,10 +5,10 @@
 ./Slaw/ContactGraph 100
 
 # Run greedy algorithm
-./Algorithms/Greedy 0.5
+./Algorithms/RunGreedy 1.0
 
 # image of contact graph
-python ./ContactGraph/VisualizeContactGraph.py 0.1
+python ./ContactGraph/VisualizeContactGraph.py 0.2
 
 # Visualize slaw data 
 python ./Slaw/VisualizeMovement.py 100

@@ -6,14 +6,12 @@ import subprocess
 
 contact_data = "contact_graph.txt"
 output_file = "contact_graph.dot"
+cache_file = "cache_greedy.txt"
 min_edge_weight = float(sys.argv[1])
 
-cache_nodes = [];
-
-if (len(sys.argv) > 2):
-   cache_in = open(sys.argv[2])
-   cache_nodes = cache_in.readline().split(",")
-   cache_nodes = [int(x) for x in cache_nodes]
+cache_in = open(cache_file)
+cache_nodes = cache_in.readline().split(",")[0:-1]
+cache_nodes = [int(x) for x in cache_nodes]
 
 output = open(output_file, 'w')
 data_in = open(contact_data, 'r')

@@ -29,7 +29,7 @@ class SlawRandom {
 
    SlawRandom (vector< vector < pair <int, int> > >& clusters, vector< pair<int, int> >& waypoints)
                : clusters(clusters), waypoints(waypoints), generator(time(NULL)), uniform_0_1 (0,1),
-                 uniform_point (0, waypoints.size() - 1), exponential (0.4) {
+                 uniform_point (0, waypoints.size() - 1), exponential (0.5) {
 
       
       for (int i = 0; i < clusters.size(); i++) {

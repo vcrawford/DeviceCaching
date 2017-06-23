@@ -8,13 +8,14 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <cmath>
 #include "CacheGraph.cpp"
 #include <iomanip>
 #include "Greedy.cpp"
 
 using namespace std;
 
-int main() {
+int main(int argc, char** argv) {
 
    string filename = "contact_graph.txt";
 
@@ -28,7 +29,7 @@ int main() {
 
    CacheGraph cg = CacheGraph(graph);
 
-   float p = 0.5;
+   float p = stof(argv[1]);
    float epsilon = 0.0000001;
 
    cout << "Running the greedy algorithm for minimum file placement to get a cache hit rate "
