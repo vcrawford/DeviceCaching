@@ -4,13 +4,14 @@
 #include <map>
 #include <list>
 #include <fstream>
-#include "Graph.cpp"
 #include <vector>
 #include <iostream>
 #include <string>
 #include <cmath>
-#include "CacheGraph.cpp"
 #include <iomanip>
+#include "Graph.cpp"
+#include "GammaUtil.cpp"
+#include "CacheGraph.cpp"
 #include "Greedy.cpp"
 
 using namespace std;
