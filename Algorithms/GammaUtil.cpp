@@ -8,7 +8,7 @@ namespace gamma_util {
    // Cached is a vector of length n (number of nodes) that takes the ith node to whether it is
    // cached or not
    // Store the ith node's small gamma value in small_gamma
-   void computeSmallGamma(vector<float>& small_gamma, const vector<bool>& cached, const Graph& graph) {
+   void computeSmallGamma(vector<double>& small_gamma, const vector<bool>& cached, const Graph& graph) {
   
       small_gamma.clear();
 
@@ -21,7 +21,7 @@ namespace gamma_util {
          }
          else {
             // the product in the equation for little gamma (see paper)
-            float product = 1;
+            double product = 1;
 
             vector<int> neighbors;
             graph.getNeighbors(i, neighbors);
@@ -49,9 +49,9 @@ namespace gamma_util {
 
    // Compute big gamma from scratch, does not do any sort of updating
    // TODO: Make non-uniform probability distribution
-   float computeBigGamma(const vector<float>& small_gamma, const Graph& graph) {
+   double computeBigGamma(const vector<double>& small_gamma, const Graph& graph) {
 
-      float big_gamma = 0;
+      double big_gamma = 0;
 
       for (int i = 0; i < graph.getNodeCount(); i++) {
 
@@ -62,10 +62,10 @@ namespace gamma_util {
    }
 
    // computes big gamma from scratch
-   float computeBigGamma(const vector<bool>& cached, const Graph& graph) {
+   double computeBigGamma(const vector<bool>& cached, const Graph& graph) {
 
       // compute small gamma
-      vector<float> small_gamma;
+      vector<double> small_gamma;
       computeSmallGamma(small_gamma, cached, graph);
 
       return computeBigGamma(small_gamma, graph);
@@ -75,8 +75,8 @@ namespace gamma_util {
    // store in delta_small_gamma as map from the node to the change
    // only contains entries for nodes that not change
    void computeDeltaSmallGamma(const int& new_cache_node, const vector<bool>& cached,
-                               const vector<float>& small_gamma, const Graph& graph,
-                               map<int, float>& delta_small_gamma) {
+                               const vector<double>& small_gamma, const Graph& graph,
+                               map<int, double>& delta_small_gamma) {
 
       delta_small_gamma.clear();
 
@@ -106,13 +106,80 @@ namespace gamma_util {
       }
    }
 
+   // Compute how much small_gamma will change if new_cache_node is removed from the cache nodes
+   // store in delta_small_gamma as map from the node to the change
+   // only contains entries for nodes that not change
+   void computeDeltaSmallGammaRemove(const int& remove_cache_node, const vector<bool>& cached,
+                                     const vector<double>& small_gamma, const Graph& graph,
+                                     map<int, double>& delta_small_gamma) {
+
+      delta_small_gamma.clear();
+
+      if (!cached[remove_cache_node]) {
+         // nothing will change
+         return;
+      }
+
+      // Need to re-compute the small_gamma of the removed node
+
+      vector<int> neighbors;
+      graph.getNeighbors(remove_cache_node, neighbors);
+
+      // product will be the probability the node WON'T get a cache hit
+      double product = 1;
+
+      for (int j = 0; j < neighbors.size(); j++) {
+
+         if (cached[neighbors[j]]) {
+
+            product = product*(1 - graph.getEdgeWeight(remove_cache_node, neighbors[j]));
+         }
+
+      }
+
+      // the change is from 1 to 1-product (which is just -product)
+      delta_small_gamma[remove_cache_node] = -1*product;
+
+
+      // Now see how much each of the removed node's neighbors will change
+
+      for (int j = 0; j < neighbors.size(); j++) {
+
+         // Only impact neighbors that are not cached
+
+         if (!cached[neighbors[j]]) {
+            double edge_weight = graph.getEdgeWeight(remove_cache_node, neighbors[j]);
+
+            delta_small_gamma[neighbors[j]] = edge_weight*(small_gamma[neighbors[j]] - 1)/(1 - edge_weight);
+         }
+      }
+   }
+
 
    // Compute how much big_gamma and small_gamma will change if node is added to cache_nodes
    // Stores change in delta_small_gamma and delta_big_gamma
-   void computeDeltaGammas(const int& node, const vector<bool>& cached, const vector<float>& small_gamma,
-                           const Graph& graph, map<int, float>& delta_small_gamma, float& delta_big_gamma) {
+   void computeDeltaGammas(const int& node, const vector<bool>& cached, const vector<double>& small_gamma,
+                           const Graph& graph, map<int, double>& delta_small_gamma, double& delta_big_gamma) {
 
       computeDeltaSmallGamma(node, cached, small_gamma, graph, delta_small_gamma);
+
+      delta_big_gamma = 0;
+
+      for (auto it = delta_small_gamma.begin(); it != delta_small_gamma.end(); it++) {
+
+         delta_big_gamma = delta_big_gamma + it->second;
+      }
+
+      delta_big_gamma = (1.0/graph.getNodeCount())*delta_big_gamma;
+
+   }
+
+   // Compute how much big_gamma and small_gamma will change if node is REMOVED from cache_nodes
+   // Stores change in delta_small_gamma and delta_big_gamma
+   void computeDeltaGammasRemove(const int& node, const vector<bool>& cached, const vector<double>& small_gamma,
+                                 const Graph& graph, map<int, double>& delta_small_gamma, double& delta_big_gamma) {
+
+      computeDeltaSmallGammaRemove(node, cached, small_gamma, graph, delta_small_gamma);
 
       delta_big_gamma = 0;
 

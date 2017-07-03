@@ -8,13 +8,13 @@ using namespace std;
 // Find nodes to cache in, cache_nodes, that results in big_gamma of at least p
 // we add the cache nodes in order to choosing into greedy_nodes
 // Returns the gamma of the graph once greedy_nodes are added
-float greedy(CacheGraph& cgraph, vector<int>& greedy_nodes, const float& p, const float& epsilon) {
+double greedy(CacheGraph& cgraph, vector<int>& greedy_nodes, const double& p, const double& epsilon) {
 
    // First, we should test if there exists a feasible solution to get p
 
-   float max_gamma = gamma_util::computeBigGamma(cgraph.can_cache, cgraph.graph);
+   double max_gamma = gamma_util::computeBigGamma(cgraph.can_cache, cgraph.graph);
 
-   if ((max_gamma < p) || (epsilon <= 0) || (epsilon >= p)) {
+   if ((max_gamma < p) || (epsilon < 0) || (epsilon >= p)) {
       return cgraph.big_gamma;
    }
 
@@ -23,17 +23,17 @@ float greedy(CacheGraph& cgraph, vector<int>& greedy_nodes, const float& p, cons
    list<int> potential_cache_nodes;
    cgraph.newCache(potential_cache_nodes);
 
-   map<int, float> delta_small_gamma; // how much small gamma will change if add node
-   float delta_big_gamma; // same with big gamma
-   float max_delta_gamma; // the biggest gamma change found so far in greedy
-   map<int, float> max_delta_small_gamma; // delta_small_gamma for the max_delta_gamma
-   vector<float> small_gamma = cgraph.small_gamma; // small gamma of graph with greedy_nodes added
-   float big_gamma = cgraph.big_gamma; // big gamma of graph with greedy_nodes added
+   map<int, double> delta_small_gamma; // how much small gamma will change if add node
+   double delta_big_gamma; // same with big gamma
+   double max_delta_gamma; // the biggest gamma change found so far in greedy
+   map<int, double> max_delta_small_gamma; // delta_small_gamma for the max_delta_gamma
+   vector<double> small_gamma = cgraph.small_gamma; // small gamma of graph with greedy_nodes added
+   double big_gamma = cgraph.big_gamma; // big gamma of graph with greedy_nodes added
    vector<bool> cache_nodes = cgraph.cache_nodes; // nodes cached so far
    int add_next; // what node we are looking at in greedy
 
    // go until big_gamma is big enough
-   while (big_gamma < (p - epsilon)) {
+   while (big_gamma - p < epsilon) {
 
       max_delta_gamma = -1;
 
