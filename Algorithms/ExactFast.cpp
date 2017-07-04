@@ -212,7 +212,7 @@ void searchChildrenSubTrees(const double& p, const int& n, SolutionTreeNode& par
 
    // But is its min_descendant still below the upper_bound?
 
-   if (right_child.min_descendant->size <= upper_bound) {
+   if (right_child.min_descendant->size < upper_bound) {
 
       // And is it feasible?
 
@@ -307,7 +307,7 @@ double exact(CacheGraph& cgraph, vector<int>& exact_nodes, const double& p) {
       greedy_soln[greedy_nodes_2[i]] = true;
    }
 
-   //leafs.push_back(greedy_soln);
+   leafs.push_back(greedy_soln);
 
    // Make root node
    SolutionTreeNode root (cgraph, greedy_nodes); 
