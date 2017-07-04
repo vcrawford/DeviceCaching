@@ -17,6 +17,7 @@
 #include "Greedy.cpp"
 #include "Exact.cpp"
 #include "ExactFast.cpp"
+#include "ExactGreedy.cpp"
 
 using namespace std;
 
@@ -98,6 +99,27 @@ int main(int argc, char** argv) {
    cout << "Fast exact time: " << end - start << " seconds" << endl; 
 
    write_exact.open("cache_fast_exact.txt");
+
+   for (int i = 0; i < cache_exact.size(); i++) {
+
+      write_exact << cache_exact[i] << ",";
+   }
+
+   write_exact.close();
+
+  // EXACT GREEDY
+
+   cout << "Running the greedy exact algorithm for minimum file placement to get a cache hit rate "
+        << "of " << p << " ..." << endl;
+
+   start = time(NULL);
+   gamma = greedy_exact::exact(cg, cache_exact, p);
+   end = time(NULL);
+
+   cout << cache_exact.size() << " nodes should cache for a cache hit rate of " << gamma << endl;
+   cout << "Greedy exact time: " << end - start << " seconds" << endl; 
+
+   write_exact.open("cache_greedy_exact.txt");
 
    for (int i = 0; i < cache_exact.size(); i++) {
 
