@@ -170,6 +170,24 @@ class CacheGraph {
          return count;
 
       }
+
+      // number of nodes that can cache
+      int canCacheCount() const {
+
+         int count = 0;
+
+         for (int i = 0; i < this->can_cache.size(); i++) {
+
+            if (this->can_cache[i]) {
+
+               count++;
+            }
+         }
+
+         return count;
+
+      }
+
 };
 
 
