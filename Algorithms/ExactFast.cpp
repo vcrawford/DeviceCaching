@@ -259,32 +259,9 @@ double exact(CacheGraph& cgraph, vector<int>& exact_nodes, const double& p) {
 
    // So by the checks above, there must exist an exact solution of at least one node
 
-   // Run greedy algorithm with p ~ 1 to get an ordering of the nodes
-
-   vector<int> greedy_nodes;
-
-   greedy(cgraph, greedy_nodes, 0.99, 0.0001);
-
-   // Add missing but cacheable nodes to the end of greedy_nodes (we need an ordering of all nodes)
+   // Get a list of all nodes
    vector<int> new_cache;
    cgraph.newCache(new_cache);
-
-   for (int i = 0; i < new_cache.size(); i++) {
-
-      bool in_greedy = false;
-      for (int j = 0; j < greedy_nodes.size(); j++) {
-
-         if (new_cache[i] == greedy_nodes[j]) {
-            in_greedy = true;
-            break;
-         }
-      }
-
-      if (!in_greedy) {
-
-         greedy_nodes.push_back(new_cache[i]);
-      }
-   }
 
    // Run greedy again with p and epsilon = 0 in order to get a feasible solution, and therefore an
    // upper bound on the optimal solution size
@@ -310,7 +287,7 @@ double exact(CacheGraph& cgraph, vector<int>& exact_nodes, const double& p) {
    leafs.push_back(greedy_soln);
 
    // Make root node
-   SolutionTreeNode root (cgraph, greedy_nodes); 
+   SolutionTreeNode root (cgraph, new_cache); 
 
    // Recursively check solution tree for possible solutions
    searchChildrenSubTrees(p, n, root, leafs, upper_bound);
