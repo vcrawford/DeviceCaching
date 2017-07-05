@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
    float epsilon = stof(argv[2]);
    string output_filename = argv[3]; // file we will append results to
    string contact_filename = argv[4]; // where the contact graph is stored
+   int run_exact = stoi(argv[5]); // whether we run exact
 
    fstream out;
    out.open(output_filename, fstream::out | fstream::app);
@@ -64,16 +65,18 @@ int main(int argc, char** argv) {
    out << "</greedy>\n";
 
    out.flush();
-   
-   // EXACT FAST
-   cout << "Running exact algorithm ..." << endl;
-   vector<int> cache_exact;
 
-   start = time(NULL);
-   gamma = fast_exact::exact(cg, cache_exact, p);
-   end = time(NULL);
-   out << "<exact>\n <n>" << n << "</n>\n" << " <size>" << cache_exact.size() << "</size>\n"
-       << " <time>" << end-start << "</time>\n</exact>\n";
+   if (run_exact == 1) {   
+      // EXACT FAST
+      cout << "Running exact algorithm ..." << endl;
+      vector<int> cache_exact;
+
+      start = time(NULL);
+      gamma = fast_exact::exact(cg, cache_exact, p);
+      end = time(NULL);
+      out << "<exact>\n <n>" << n << "</n>\n" << " <size>" << cache_exact.size() << "</size>\n"
+          << " <time>" << end-start << "</time>\n</exact>\n";
+   }
 
    out.close();
 

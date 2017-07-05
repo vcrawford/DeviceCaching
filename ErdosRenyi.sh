@@ -1,32 +1,42 @@
 # Generate random ER graphs, and find nodes to get desired cache hit rate
-# Varying n
-
-#Remove old data file
-rm results.txt
+time=$(date +%s)
+timeout="5h"
+startn=20
+endn=500
+incn=10
+deg=10
+p=0.5
+eps=0.001
+ergraph="ergraph_"$time".txt"
+results="results_"$time".xml"
+n_vs_size="n_vs_size_"$time".png"
+timedout=0
 
 #Begin data file
-echo "<Experiment>" >> results.txt
+echo "<Experiment>" >> $results
 
-# Do first experiment with visualization
-#Random ER graph
-RandomGraph/ErdosRenyi 20 5 ergraph.txt
+echo "<about>ERgraph,startn:$startn,endn:$endn,incn:$incn,deg:$deg,p:$p,eps:$eps,timeout:$timeout</about>" >> $results
 
-#Get cache nodes
-timeout 10m Algorithms/RunMFP 0.95 0.001 results.txt ergraph.txt
-
-cp ergraph.txt ergraph_first.txt 
-
-for i in {25..75..5}
+for ((i=$startn;i<=$endn;i=i+5));
 do
    #Random ER graph
-   RandomGraph/ErdosRenyi $i 5 ergraph.txt
+   RandomGraph/ErdosRenyi $i $deg $ergraph
 
    #Get cache nodes
-   timeout 10m Algorithms/RunMFP 0.95 0.001 results.txt ergraph.txt 
+   if [ $timedout -eq 0 ]
+   then
+      timeout $timeout Algorithms/RunMFP $p $eps $results $ergraph 1
+   else
+      timeout $timeout Algorithms/RunMFP $p $eps $results $ergraph 0
+   fi
+
+   if [ $? -eq 124 ]
+   then
+      timedout=1
+   fi
 done
 
-echo "</Experiment>" >> results.txt
+echo "</Experiment>" >> $results
 
-# Do plot of first experiment with pink greedy nodes
-python ContactGraph/VisualizeContactGraph.py ergraph_first.txt ergraph.dot ergraph.eps 0 results.txt
+python Plots/DataPlots.py $results $n_vs_size
 
