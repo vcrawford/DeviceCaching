@@ -1,17 +1,28 @@
 # Take a contact graph file and output dot file visualizing it
-# Call like python VisualizeContact.py 0.01
+# Call like python VisualizeContact.py contact_graph.txt output_graph.dot ...
+# output_graph.eps 0.01 cache_nodes.txt
 
 import sys
 import subprocess
+import xml.etree.ElementTree as et
 
-contact_data = "contact_graph.txt"
-output_file = "contact_graph.dot"
-cache_file = "cache_greedy.txt"
-min_edge_weight = float(sys.argv[1])
+contact_data = sys.argv[1]
+output_file = sys.argv[2]
+output_file_im = sys.argv[3]
+min_edge_weight = float(sys.argv[4])
 
-cache_in = open(cache_file)
-cache_nodes = cache_in.readline().split(",")[0:-1]
-cache_nodes = [int(x) for x in cache_nodes]
+cache_nodes = []
+# If we want to plot cache nodes
+# will plot the nodes for the first experiment
+if len(sys.argv) > 5:
+   cache_file = sys.argv[5]
+   tree = et.parse(cache_file)
+   root = tree.getroot()
+   first_experiment = root[0]
+   for data in first_experiment:
+      if data.tag == "cache":
+         cache_data = data.text.split(",")[0:-1]
+         cache_nodes = [int(x) for x in cache_data]
 
 output = open(output_file, 'w')
 data_in = open(contact_data, 'r')
@@ -46,5 +57,5 @@ output.write("} \n")
 output.close()
 data_in.close()
 
-subprocess.call(["dot", "-Tps", output_file, "-o", "contact_graph.eps"])
+subprocess.call(["dot", "-Tps", output_file, "-o", output_file_im])
 

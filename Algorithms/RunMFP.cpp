@@ -51,8 +51,19 @@ int main(int argc, char** argv) {
    float gamma = greedy(cg, greedy_nodes, p, epsilon);
    end = time(NULL);
 
-   out << "<greedy>\n <n>" << n << "<\\n>\n" << " <cache>" << greedy_nodes.size() << "<\\cache>\n"
-       << " <time>" << end-start << "<\\time>\n<\\greedy>\n";
+   out << "<greedy>\n <n>" << n << "</n>\n" << " <size>" << greedy_nodes.size() << "</size>\n"
+       << " <time>" << end-start << "</time>\n";
+
+   out << " <cache>";
+   for (int i = 0; i < greedy_nodes.size(); i++) {
+
+      out << greedy_nodes[i] << ",";
+   }
+   out << "</cache>\n";
+
+   out << "</greedy>\n";
+
+   out.flush();
    
    // EXACT FAST
    cout << "Running exact algorithm ..." << endl;
@@ -61,9 +72,9 @@ int main(int argc, char** argv) {
    start = time(NULL);
    gamma = fast_exact::exact(cg, cache_exact, p);
    end = time(NULL);
-   out << "<exact>\n <n>" << n << "<\\n>\n" << " <cache>" << cache_exact.size() << "<\\cache>\n"
-       << " <time>" << end-start << "<\\time>\n<\\exact>";
- 
+   out << "<exact>\n <n>" << n << "</n>\n" << " <size>" << cache_exact.size() << "</size>\n"
+       << " <time>" << end-start << "</time>\n</exact>\n";
+
    out.close();
 
    cout << "=== COMPLETED ALGORITHMS ===" << endl << endl;

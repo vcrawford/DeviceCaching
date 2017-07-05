@@ -11,11 +11,27 @@ using namespace std;
 
 int main(int argc, char** argv) {
 
+   cout << endl << "=== GENERATING RANDOM ER GRAPH ===" << endl;
+
    // the number of nodes
    int n = stoi(argv[1]);
 
+   // the desired average node degree
+   int deg = stoi(argv[2]);
+
+   cout << n << " nodes with expected average degree of " << deg << endl;
+
+   if (deg > (n - 1)) {
+
+      throw "Error in random erdos-renyi graph generation: The average degree must be at most n-1";
+   }
+
+   // get the probability from the average node degree
+   double p = double(deg)/(n - 1);
+ 
    // the probability of edges
-   double p = stof(argv[2]);
+   //double p = stof(argv[2]);
+
 
    // where to write the graph matrix
    string output_filename = argv[3];
@@ -57,6 +73,8 @@ int main(int argc, char** argv) {
    }
 
    output.close();
+
+   cout << "=== COMPLETED GENERATE RANDOM ER GRAPH ===" << endl;
 }
 
 
