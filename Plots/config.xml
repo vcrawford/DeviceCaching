@@ -1,0 +1,14 @@
+<config>
+   <experiments>
+      <id color="r" name="Erdos Renyi p=0.5">ER0.5</id>
+      <id color="b" name="Erdos Renyi p=0.7">ER0.7</id>
+      <id color="g" name="Erdos Renyi p=0.9">ER0.9</id>
+   </experiments>
+   <algorithm_types>
+      <type marker="--" name="Greedy">greedy0</type>
+      <type marker="o" name="Exact">exact</type>
+   </algorithm_types>
+   <x_axis>n</x_axis>
+   <y_axis>size</y_axis>
+   <x_max>100</x_max>
+</config>
