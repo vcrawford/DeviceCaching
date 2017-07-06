@@ -33,7 +33,7 @@ double greedy(CacheGraph& cgraph, vector<int>& greedy_nodes, const double& p, co
    int add_next; // what node we are looking at in greedy
 
    // go until big_gamma is big enough
-   while (big_gamma - p < epsilon) {
+   while (p - big_gamma > epsilon) {
 
       max_delta_gamma = -1;
 

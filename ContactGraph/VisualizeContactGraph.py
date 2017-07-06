@@ -43,7 +43,7 @@ for line in data_in:
 
       # Only need 1/2 of the contact since it is symmetric
       if node_i < node_j and float(value) > min_edge_weight:
-         output.write("{} -- {} [penwidth={}] \n".format(node_i, node_j, value))
+         output.write("{} -- {} [penwidth={}]; \n".format(node_i, node_j, value))
       node_j = node_j + 1
 
    node_i = node_i + 1
@@ -51,7 +51,9 @@ for line in data_in:
 # Color cache nodes
 for i in range(node_i):
    if i in cache_nodes:
-      output.write("{} [fillcolor=pink]".format(i))
+      output.write("{} [fillcolor=pink]; \n".format(i))
+   else:
+      output.write("{}; \n".format(i))
 
 output.write("} \n")
 output.close()
