@@ -4,6 +4,9 @@
 #include <random>
 #include <iostream>
 #include <ctime>
+#include <stdexcept>
+#include <iomanip>
+#include "RandomGraphUtil.cpp"
 
 using namespace std;
 
@@ -19,6 +22,9 @@ int main(int argc, char** argv) {
    // the desired average node degree
    int deg = stoi(argv[2]);
 
+   // where to write the graph matrix
+   string output_filename = argv[3];
+
    cout << n << " nodes with expected average degree of " << deg << endl;
 
    if (deg > (n - 1)) {
@@ -32,47 +38,17 @@ int main(int argc, char** argv) {
    // the probability of edges
    //double p = stof(argv[2]);
 
-
-   // where to write the graph matrix
-   string output_filename = argv[3];
-
-   ofstream output;
-   output.open(output_filename);
-
    // used to determine if there exists an edge, and also what its weight is
    default_random_engine generator (time(NULL));
    uniform_real_distribution<double> dist (0.0, 1.0);
 
-   vector< vector<double> > graph (n, vector<double> (n, 0));
+   vector< vector<double> > graph;
 
-   // generate the graph
-   for (int i = 0; i < n; i++) {
+   random_graph_util::randomER(graph, n, p);
 
-      for (int j = 0; j < i; j++) {
+   random_graph_util::edgeWeights(graph);
 
-         if (dist(generator) < p) {
-
-            // there will be an edge with random weight
-            double edge_weight = dist(generator);
-
-            graph[i][j] = edge_weight;
-            graph[j][i] = edge_weight;
-         }
-      }
-   }
-
-   // write to file
-   for (int i = 0; i < n; i++) {
-
-      for (int j = 0; j < n; j++) {
-
-         output << graph[i][j] << " ";
-      }
-
-      output << endl;
-   }
-
-   output.close();
+   random_graph_util::writeGraph(output_filename, graph); 
 
    cout << "=== COMPLETED GENERATE RANDOM ER GRAPH ===" << endl;
 }

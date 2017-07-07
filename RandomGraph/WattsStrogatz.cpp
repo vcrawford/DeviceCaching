@@ -7,6 +7,8 @@
 #include <fstream>
 #include <random>
 #include <iostream>
+#include <iomanip>
+#include "RandomGraphUtil.cpp"
 
 using namespace std;
 
@@ -35,24 +37,8 @@ int main(int argc, char** argv) {
 
    // construct lattice
 
-   vector< vector<double> > graph (n, vector<double> (n, 0));
-
-   for (int i = 0; i < n; i++) {
-
-      for (int j = i - k/2; j < i; j++) {
-
-         if (j < 0) {
-
-            graph[i][n + j] = 1;
-            graph[n + j][i] = 1;
-         }
-         else {
-
-            graph[i][j] = 1;
-            graph[j][i] = 1;
-         }
-      }
-   }
+   vector< vector<double> > graph;
+   random_graph_util::lattice(graph, n, k);
 
    // re-wire each edge with probability beta
 
@@ -99,36 +85,10 @@ int main(int argc, char** argv) {
    }
 
    // Now pick edge weights between 0 and 1 for every edge
-
-   for (int i = 0; i < n; i++) {
-
-      for (int j = 0; j < i; j++) {
-
-         if (graph[i][j] != 0) {
-
-            double edge_weight = dist_rewire(gen);
-            graph[i][j] = edge_weight;
-            graph[j][i] = edge_weight;
-         }
-      }
-   }
+   random_graph_util::edgeWeights(graph);
 
    // write graph to file
-
-   ofstream file_strm;
-   file_strm.open(filename); 
-
-   for (int i = 0; i < n; i++) {
-
-      for (int j = 0; j < n; j++) {
-
-         file_strm << graph[i][j] << " ";
-      }
-
-      file_strm << endl;
-   }
-
-   file_strm.close();
+   random_graph_util::writeGraph(filename, graph);
 
    cout << "=== GENERATING RANDOM WS GRAPH COMPLETE ===" << endl << endl;
 }
