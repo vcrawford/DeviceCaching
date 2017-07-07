@@ -19,6 +19,8 @@ int main(int argc, char** argv) {
 
    int d = stoi(argv[2]); // desired average degree
 
+   string output_file = argv[3];
+
    if ((d%2 != 0) || (d > n-1)) throw invalid_argument("For BA graph, d must be even and less than n-1");
 
    cout << "BA graph has " << n << " nodes" << endl;
@@ -107,7 +109,9 @@ int main(int argc, char** argv) {
 
    }
 
-   random_graph_util::writeGraph("a_test.txt", graph);
+   random_graph_util::edgeWeights(graph);
+
+   random_graph_util::writeGraph(output_file, graph);
 
    cout << "The average degree is " << sum_degrees/double(n) << endl;
 
