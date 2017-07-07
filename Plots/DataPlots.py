@@ -63,25 +63,28 @@ for f in files:
    root = tree.getroot()
    exp = root.attrib["id"]
 
-   for alg in alg_types:
+   if exp in exps:
+   # If this is experiment we are plotting, plot it
 
-      x = []
-      y = []
+      for alg in alg_types:
 
-      runs = root.findall(alg)
+         x = []
+         y = []
 
-      for run in runs:
+         runs = root.findall(alg)
+
+         for run in runs:
  
-         single_x = float(run.findall(x_axis)[0].text)
+            single_x = float(run.findall(x_axis)[0].text)
 
-         if single_x <= x_max:
+            if single_x <= x_max:
 
-            x.append(single_x)
-            y.append(float(run.findall(y_axis)[0].text))
+               x.append(single_x)
+               y.append(float(run.findall(y_axis)[0].text))
 
-      plt.plot(x, y, colors[exp] + markers[alg])
+         plt.plot(x, y, colors[exp] + markers[alg])
  
-      handles.append(exp_names[exp] + " " + alg_names[alg])
+         handles.append(exp_names[exp] + " " + alg_names[alg])
 
 plt.legend(handles, loc=2)
 plt.savefig(sys.argv[-1])

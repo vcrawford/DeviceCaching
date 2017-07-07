@@ -18,7 +18,13 @@ using namespace std;
 // Generates data for SLAW movement model
 int main(int argc, char* argv[]) {
 
-   cout << "Running SLAW movement model ..." << endl;
+   cout << endl << "=== Running SLAW movement model ===" << endl;
+
+   int walker_count = atoi(argv[1]);
+   int days = atoi(argv[2]);
+   int route_start = atoi(argv[3]);
+   int speed = atoi(argv[4]);
+   string location_output_file = argv[5];
 
    cout << "Generating fractal points ..." << endl;
 
@@ -59,10 +65,8 @@ int main(int argc, char* argv[]) {
 
    // Create all the walkers
 
-   int speed = 1;
    SlawRandom rand (clusters, points);
    
-   int walker_count = atoi(argv[1]);
    vector<Walker> walkers;
 
    cout << "Creating " << walker_count << " walkers..." << endl;
@@ -74,8 +78,6 @@ int main(int argc, char* argv[]) {
    }
 
    // Run simulation
-   int days = atoi(argv[2]);
-   int route_start = atoi(argv[3]);
    int total_time = days*86400;
 
    cout << "Running movement for " << days << " day(s) where routes start at hour "
@@ -83,7 +85,7 @@ int main(int argc, char* argv[]) {
 
 
    ofstream walker_locations;
-   walker_locations.open("locations.txt");
+   walker_locations.open(location_output_file, fstream::out | fstream::app);
 
    for (int day = 0; day < days; day++) {
 
@@ -108,6 +110,6 @@ int main(int argc, char* argv[]) {
       }
    }
 
-   cout << endl;
+   cout << endl << "=== Finished slaw movement model ===" << endl << endl;
 }
 

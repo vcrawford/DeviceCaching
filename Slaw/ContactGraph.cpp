@@ -14,13 +14,16 @@ using namespace std;
 
 int main(int agrc, char* argv[]) {
 
-   ifstream location_data;
-   location_data.open("locations.txt");   
    int node_count = atoi(argv[1]);
+   string location_data_file = argv[2];
+   int radius = atoi(argv[3]); // the radius that two devices are considered in contact
+   string contact_graph_file = argv[4];
+
+   ifstream location_data;
+   location_data.open(location_data_file);   
    int time = 1; // The time in simulation we are (in seconds from the beginning)
    int node = 0; // What point we are looking at the location x,y of
    int x, y; // the location we read in
-   int radius = 30; // the radius that two devices are considered in contact
    vector< pair<int, int> > locations; // The locations of each device
    vector< vector <float> > contact_graph; // ith, jth entry is the time the ith device has been in contact with the
                                            // jth device over the entire simulation
@@ -94,7 +97,7 @@ int main(int agrc, char* argv[]) {
 
    // write contact graph to file
    ofstream contact_data_file;
-   contact_data_file.open("contact_graph.txt");
+   contact_data_file.open(contact_graph_file);
 
    for (int i = 0; i < contact_graph.size(); i++) {
 

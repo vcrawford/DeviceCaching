@@ -1,19 +1,19 @@
 # Generate random WS graphs, and find nodes to get desired cache hit rate
 time=$(date +%s)
-timeout="5h"
+timeout="5"
 startn=20
 endn=10000
 incn=5
 k=10
-beta=0.2
-p=0.5
+beta=0.01
+p=0.7
 graph="wsgraph_"$time".txt"
 results="results_"$time".xml"
 n_vs_size="n_vs_size_"$time".png"
 timedout=0
 
 #Begin data file
-echo "<Experiment id=\"WS\">" >> $results
+echo "<Experiment id=\"WS_"$beta"_"$p"\">" >> $results
 
 echo "<about>WSgraph,startn:$startn,endn:$endn,incn:$incn,k:$k,beta:$beta,p:$p,timeout:$timeout</about>" >> $results
 
