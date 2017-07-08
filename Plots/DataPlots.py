@@ -52,6 +52,14 @@ y_axis = root.findall("y_axis")[0].text
 
 # What value we will cap the x axis at
 x_max = float(root.findall("x_max")[0].text)
+x_min = float(root.findall("x_min")[0].text)
+x_scale = root.findall("x_scale")[0].text
+y_scale = root.findall("y_scale")[0].text
+x_label = root.findall("x_label")[0].text
+y_label = root.findall("y_label")[0].text
+
+# location of legend
+legend = int(root.findall("legend")[0].text)
 
 # Now plot the data
 
@@ -86,6 +94,11 @@ for f in files:
  
          handles.append(exp_names[exp] + " " + alg_names[alg])
 
-plt.legend(handles, loc=2)
+plt.xscale(x_scale)
+plt.yscale(y_scale)
+plt.xlabel(x_label)
+plt.ylabel(y_label)
+plt.xlim([x_min, x_max])
+plt.legend(handles, loc=legend)
 plt.savefig(sys.argv[-1])
 
