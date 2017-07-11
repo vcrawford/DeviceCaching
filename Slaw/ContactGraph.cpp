@@ -25,12 +25,11 @@ int main(int agrc, char* argv[]) {
 
    // generate contact graph
 
-   vector< vector <float> > contact_graph;
+   vector< vector <double> > contact_graph;
 
    cout << "Generating contact data for " << node_count << " devices ..." << endl;
 
-   contactGraphFromLocation(node_count, radius, location_data_file, contact_graph_file,
-                            days, contact_graph);
+   contactGraphFromLocation(node_count, radius, location_data_file, days, contact_graph);
 
    // write contact graph to file
    ofstream contact_data_file;
