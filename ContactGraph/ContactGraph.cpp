@@ -3,8 +3,7 @@ using namespace std;
 // Takes in location data and computes contact graph from some number of the first days
 // stores data in contact_graph
 void contactGraphFromLocation(const int& n, const int& radius, const string& input,
-                              const string& output, const int& days,
-                              vector<vector <float>>& contact_graph) {
+                              const int& days, vector<vector <double>>& contact_graph) {
 
    ifstream location_data;
    location_data.open(input);
@@ -21,7 +20,7 @@ void contactGraphFromLocation(const int& n, const int& radius, const string& inp
    // locations of each device in a second
    vector< pair<int, int> > locations (n, pair<int, int> (0, 0));
 
-   contact_graph = vector< vector<float>> (n, vector<float> (n, 0));
+   contact_graph = vector< vector<double>> (n, vector<double> (n, 0));
 
    // now read in the location data
   
