@@ -7,16 +7,16 @@ class CacheGraph {
    public:
 
       // The graph these nodes correspond to
-      Graph graph;
+      Graph& graph;
 
-      // The nodes that are considered to have some data cached
+      // The nodes that are considered to have a file cached
       // Takes the id of each node to true or false depending on whether it is cached
       vector<bool> cache_nodes;
 
       // Nodes that are consider able to cache data
       // takes the id of each node to true or false
       // assumed to include nodes that already have data cached
-      vector<bool> can_cache;
+      vector<bool>& can_cache;
 
       // The probability of a cache hit 
       double big_gamma;
@@ -25,11 +25,10 @@ class CacheGraph {
       vector<double> small_gamma;
 
       // Create instance with a subset of nodes cached, and a subset unavailable
-      CacheGraph(Graph& graph, vector<bool>& cache_nodes, vector<bool>& can_cache_nodes) {
+      CacheGraph(Graph& graph, vector<bool>& cache_nodes, vector<bool>& can_cache_nodes):
+         graph (graph), can_cache (can_cache_nodes) {
 
-         this->graph = graph;
          this->cache_nodes = cache_nodes;
-         this->can_cache = can_cache_nodes;
 
          // compute this->small_gamma for cache_nodes
          gamma_util::computeSmallGamma(this->small_gamma, this->cache_nodes, this->graph);
@@ -39,22 +38,15 @@ class CacheGraph {
 
       }
 
-      // Create instance where no nodes are yet caching, all nodes assumed available
-      CacheGraph(Graph& graph) {
-
-         this->graph = graph;
+      // Create instance where no nodes are yet caching
+      CacheGraph(Graph& graph, vector<bool>& can_cache_nodes): graph(graph), can_cache(can_cache_nodes) {
 
          for (int i = 0; i < this->graph.getNodeCount(); i++) {
             this->cache_nodes.push_back(false);
-            this->can_cache.push_back(true);
+            this->small_gamma.push_back(0);
          }
 
-         // compute this->small_gamma for cache_nodes
-         gamma_util::computeSmallGamma(this->small_gamma, this->cache_nodes, this->graph);
-
-         // compute this->big_gamma using this->small_gamma for cache_nodes
-         this->big_gamma = gamma_util::computeBigGamma(this->small_gamma, this->graph);
-
+         this->big_gamma = 0;
       }
 
       // Add all nodes in nodes to cache, assuming they are all allowed to cache
@@ -79,7 +71,7 @@ class CacheGraph {
       // Returns whether a new node was cached or not
       bool addCacheNode(int& node) {
 
-         if (isCached(node) || !canCache(node)) {
+         if (isCached(node) || !this->can_cache[node]) {
 
             return false;
          }
@@ -101,27 +93,11 @@ class CacheGraph {
          return true;
       }
 
-      // Make so node can no longer cache
-      void lockCache(int& node) {
-
-         if (this->cache_nodes[node]) {
-
-            throw invalid_argument("You cannot lock node for caching if it already has data cached.");
-         }
-
-         this->can_cache[node] = false;
-      }
 
       // Checks whether this node is caching
       bool isCached(const int& node) const {
 
          return this->cache_nodes[node];
-      }
-
-      bool canCache(const int& node) const {
-
-         return this->can_cache[node];
-
       }
 
       // Get a list of all nodes that are able to cache, and are not already caching
@@ -176,7 +152,7 @@ class CacheGraph {
 
          int count = 0;
 
-         for (int i = 0; i < this->can_cache.size(); i++) {
+         for (int i = 0; i < this->cache_nodes.size(); i++) {
 
             if (this->can_cache[i]) {
 
@@ -187,6 +163,7 @@ class CacheGraph {
          return count;
 
       }
+
 
 };
 

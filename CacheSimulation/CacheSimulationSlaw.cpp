@@ -4,10 +4,18 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <string>
 #include <sstream>
 #include <random>
 #include <map>
 #include <queue>
+#include <cmath>
+#include <list>
+#include "../ContactGraph/ContactGraph.cpp"
+#include "../Algorithms/Graph.cpp"
+#include "../Algorithms/GammaUtil.cpp"
+#include "../Algorithms/CacheGraph.cpp"
+#include "CacheGraphMultiFile.cpp"
 #include "D2D.cpp"
 
 using namespace std;
@@ -15,112 +23,114 @@ using namespace std;
 int main(int argc, char** argv) {
 
    // number of devices in this simulation
-   int n = atoi(argv[1]);
+   int n = stoi(argv[1]);
 
-   // random number generator for file request
-   mt19937 generator(random_device{}());
-   uniform_real_distribution<float> unif_0_1 (0, 1); // computing if there is a request at all
-   uniform_int_distribution<int> unif_n (0, n - 1); // which device requested the file
+   // number of potential cache files in this simulation
+   int m = stoi(argv[2]);
 
-   // devices that cache the file for greedy algorithm
-   ifstream cache_greedy;
-   cache_greedy.open("cache_greedy.txt");
+   // number of files that should be cached at any time (assumed to be the most popular k)
+   int k = stoi(argv[3]);
 
-   string cache_greedy_str;
-   getline(cache_greedy, cache_greedy_str);
+   // cache hit rate for most popular k files
+   double p = stof(argv[4]);
 
-   // search through the string and get all devices
-   vector<int> greedy_devices;
-   int search_start = 0;
-   int pos;
+   // probability that there is a request for a file during any second
+   double f_p = stof(argv[5]);
 
-   while ((pos = cache_greedy_str.find(",", search_start)) != string::npos) {
+   // the file that has the locations for all of our devices
+   string locations_file = argv[6];
 
-      greedy_devices.push_back(stoi(cache_greedy_str.substr(search_start, pos - search_start)));
-      search_start = pos + 1;
+   // the file to output results to
+   string results_file = argv[7];
+
+   // the radius that is considered in contact
+   int radius = stoi(argv[8]);
+
+   // parameter for our Zipf distribution
+   double zipf_param = stof(argv[9]);
+
+   // how many days are used for the contact graph computation
+   int days = stoi(argv[10]);
+
+   // epsilon for greedy
+   double epsilon = stof(argv[11]);
+
+   int num_thresholds = stoi(argv[12]);
+
+   int threshold_size = stoi(argv[13]);
+
+   double first_rate = stof(argv[14]);
+
+   double threshold_dec = stof(argv[15]);
+
+   // how many files a device can cache
+   int cache_size = stoi(argv[16]);
+
+   cout << endl << "=== Cache Simulation ===" << endl;
+
+   cout << "Beginning simulation with " << n << " devices, where the " << k
+        << " most popular of them are cached at any time." << endl;
+
+   // Make a ranking for the files
+   
+   FileRanking fr (m);
+
+   // make devices
+
+   vector<Device> devices;
+
+   for (int i = 0; i < n; i++) {
+
+      devices.push_back(Device (i, m));
    }
 
-   cache_greedy.close();
+   // and a D2D controller
 
-   // Simulate caching requests, where at each time step devices probabilistically request
-   // the file
-   ifstream location_data;
-   location_data.open("locations.txt");
+   D2DController d2d (devices);
 
-   vector< pair<int, int> > locations; // the locations of the n devices
-   int node = 0; // which node we are looking at the location of in the loop
-   stringstream line_strm;
-   string line;
-   float request_probability = 0.015; // the probability that in a second a file will be requested
-                                      // about 1 request per minute
-   bool is_request;
-   int requesting_device;
-   int time = 0; // how many seconds in our simulation
-   int x, y; // the location ints
+   // make object that handles all probability stuff
 
-   int num_requests = 0; // total number of file requests
-   int cache_hit = 0; // the number of times a request has had a cache hit
-   float radius = 30; // the distance that two devices are in contact
+   FileRequest freq (m, n, zipf_param, f_p, fr); 
 
-   vector<int> device_requests (n, 0);
+   // and a BS
+   BaseStation bs (devices);
 
-   while (getline(location_data, line)) {
+   // Now compute contact graph from location data 
 
-      // read in point
-      line_strm.clear();
-      line_strm.str(line);
-      line_strm >> x >> y;
+   cout << "Computing contact graph from the first " << days << " days" << endl;
 
-      if (locations.size() < n) {
-         // hasn't been filled in yet
-         locations.push_back(make_pair(x, y));
-      }
-      else {
-         locations[node] = make_pair(x, y);
-      }
+   vector< vector<double> > contact_graph;
 
-      if (node == (n - 1)) {
-         // we got to the end of a time step, update contact data
-         // time to do request simulation
-         time++;
+   contactGraphFromLocation(n, radius, locations_file, days, contact_graph); 
 
-         // Is there a request?
-         
-         is_request = ((unif_0_1(generator)) < request_probability);
-         
-         if (is_request) {
+   // Now build the graph object we will use for our algorithms
+   Graph g (contact_graph);   
 
-            num_requests++;
+   // And a multi file cache graph
+   CacheGraphMultiFile cg (g, n, cache_size, epsilon);
 
-            // which device?
-            requesting_device = unif_n(generator);
-            device_requests[requesting_device]++;
+   // Finally, a cache controller
+   vector<int> thresholds;
+   vector<double> cache_hit_rates;
 
-            // check if it's in contact with a cache device
-            for (int j = 0; j < greedy_devices.size(); j++) {
-               pair<int, int> cache_device_location = locations[greedy_devices[j]];
-               float distance = sqrt(pow(locations[greedy_devices[j]].first -
-                                         locations[requesting_device].first, 2.0) +
-                                     pow(locations[greedy_devices[j]].second -
-                                         locations[requesting_device].second, 2.0));
+   int threshold_lower_bound = n - threshold_size - 1;
+   double cache_hit_rate = first_rate;
 
-               if (distance < radius) {
-                  // cache hit
-                  cache_hit ++;
-                  break;
-               }
-            }
-         }
+   for (int i = 0; i < num_thresholds; i++) {
 
-         node = -1; // will be incremented to 0
+     thresholds.push_back(threshold_lower_bound);
 
-      }
+     cache_hit_rates.push_back(cache_hit_rate);
 
+     threshold_lower_bound -= threshold_size;
 
-      node++;
+     cache_hit_rate -= threshold_dec;
    }
 
-   cout << cache_hit/((float)num_requests) << endl;
+   CacheController cc (thresholds, cache_hit_rates, fr, cg);
+
+   cout << "=== CACHE SIMULATION COMPLETE ===" << endl << endl;
+
 }
 
 
