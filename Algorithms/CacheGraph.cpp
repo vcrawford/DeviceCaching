@@ -51,48 +51,27 @@ class CacheGraph {
 
       // Add all nodes in nodes to cache, assuming they are all allowed to cache
       // the gammas are updated
-      // returns whether all nodes were new nodes that were cached
-      bool addCacheNodes(vector<int>& nodes) {
-
-         bool all_added = true;
+      void addCacheNodes(vector<int>& nodes) {
 
          for (int i = 0; i < nodes.size(); i++) {
 
-            all_added = all_added && addCacheNode(nodes[i]);
+            if (this->can_cache[nodes[i]]) {
+
+               this->cache_nodes[nodes[i]] = true;
+            }
+            else {
+
+               throw invalid_argument("Attempting to add node that cannot be cached");
+            }
          }
 
-         return all_added;
+         // compute this->small_gamma for cache_nodes
+         gamma_util::computeSmallGamma(this->small_gamma, this->cache_nodes, this->graph);
+
+         // compute this->big_gamma using this->small_gamma for cache_nodes
+         this->big_gamma = gamma_util::computeBigGamma(this->small_gamma, this->graph);
+
       }
-
-      // Add a node to the cache nodes, assuming it is allowed to cache
-      // big_gamma and small_gamma must be updated accordingly
-      // Note that big_gamma must be updated before small_gamma since it uses the small_gamma for
-      // the previous cache_nodes
-      // Returns whether a new node was cached or not
-      bool addCacheNode(int& node) {
-
-         if (isCached(node) || !this->can_cache[node]) {
-
-            return false;
-         }
-
-         map<int, double> delta_small_gamma;
-         double delta_big_gamma;
-         gamma_util::computeDeltaGammas(node, this->cache_nodes, this->small_gamma, this->graph,
-                                        delta_small_gamma, delta_big_gamma);
-
-         // Set new values using the deltas
-         for (auto it = delta_small_gamma.begin(); it != delta_small_gamma.end(); it++) {
-            this->small_gamma[it->first] = this->small_gamma[it->first] + it->second;
-         }
-
-         this->big_gamma = this->big_gamma + delta_big_gamma;
-
-         this->cache_nodes[node] = true;
-
-         return true;
-      }
-
 
       // Checks whether this node is caching
       bool isCached(const int& node) const {

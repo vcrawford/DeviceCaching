@@ -12,6 +12,8 @@ double greedy(CacheGraph& cgraph, vector<int>& greedy_nodes, const double& p, co
 
    // First, we should test if there exists a feasible solution to get p
 
+   greedy_nodes.clear();
+
    double max_gamma = gamma_util::computeBigGamma(cgraph.can_cache, cgraph.graph);
 
    if ((max_gamma < p) || (epsilon < 0) || (epsilon >= p)) {

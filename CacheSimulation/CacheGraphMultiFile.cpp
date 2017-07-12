@@ -4,7 +4,7 @@ using namespace std;
 class CacheGraphMultiFile {
 
    // the cache graphs for the ith file
-   map<int, CacheGraph> cgs;
+   map<int, CacheGraph> cache_graphs;
 
    // the graph we are working with
    Graph& graph;
@@ -35,9 +35,83 @@ class CacheGraphMultiFile {
    // Returns whether this was successful or not
    bool cacheFile (const int& file_id, const double& p, vector<int>& nodes) {
 
-      return true;
+      if (this->cache_graphs.find(file_id) == this->cache_graphs.end()) {
+
+         this->cache_graphs.insert( make_pair(file_id, CacheGraph (this->graph, this->can_cache)) );
+      } 
+
+      if (greedy(this->cache_graphs.at(file_id), nodes, p, this->epsilon) >= p - this->epsilon) {
+
+         cout << nodes.size() << endl;
+
+         this->cache_graphs.at(file_id).addCacheNodes(nodes);
+
+         for (int i = 0; i < nodes.size(); i++) {
+
+            this->available_cache[nodes[i]]--;
+
+            if (this->available_cache[nodes[i]] == 0) {
+
+               this->can_cache[nodes[i]] = false;
+            }
+         }
+
+         return true;
+      }
+
+      return false;
 
    }
 
+   friend ostream& operator<<(ostream&, const CacheGraphMultiFile&);
+
 };
 
+ostream& operator<<(ostream& os, const CacheGraphMultiFile& x) {
+
+   os << "Cache space left: ";
+
+   for (int i = 0; i < x.available_cache.size(); i++) {
+
+      os << "(" << i << ", " << x.available_cache[i] << ") ";
+   }
+
+   os << endl;
+
+   os << "Can cache: ";
+
+   for (int i = 0; i < x.can_cache.size(); i++) {
+
+      if (x.can_cache[i]) {
+
+         os << i << ", ";
+      }
+   }
+
+   os << endl;
+
+   os << "Cache graphs: ";
+
+   os << endl;
+
+   for (int i = 0; i < x.cache_graphs.size(); i++) {
+
+      os << " File " << i << " (gamma = " << x.cache_graphs.at(i).big_gamma << "): ";
+
+      for (int j = 0; j < x.cache_graphs.at(i).cache_nodes.size(); j++) {
+
+         if (x.cache_graphs.at(i).cache_nodes[j]) {
+
+            os << j << ", ";
+         }
+      }
+
+      os << endl;
+   }
+
+   os << endl;
+
+   return os;
+
+}
+  

@@ -8,6 +8,11 @@ void contactGraphFromLocation(const int& n, const int& radius, const string& inp
    ifstream location_data;
    location_data.open(input);
 
+   if (!location_data.good()) {
+
+      throw invalid_argument("File for contact graph does not exist");
+   }
+
    // time in simulation
    int time = 0;
 
