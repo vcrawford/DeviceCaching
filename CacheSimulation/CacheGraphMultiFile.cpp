@@ -63,6 +63,29 @@ class CacheGraphMultiFile {
 
    }
 
+   // get reference to cache_nodes vector for a file
+   // returns whether there were any
+   bool getCacheNodes(const int& file, vector<int>& cache_nodes) {
+
+      cache_nodes.clear();
+
+      if (this->cache_graphs.find(file) != this->cache_graphs.end()) {
+
+         for (int i = 0; i < this->cache_graphs.at(file).cache_nodes.size(); i++) {
+
+            if (this->cache_graphs.at(file).cache_nodes[i]) {
+
+               cache_nodes.push_back(i);
+            }
+         }
+
+         return true;
+      }
+
+      return false;
+
+   }
+
    friend ostream& operator<<(ostream&, const CacheGraphMultiFile&);
 
 };

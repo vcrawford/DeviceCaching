@@ -22,6 +22,9 @@ class CacheController {
    // the theoretical cache graph construct
    CacheGraphMultiFile cache_graph;
 
+   // all devices in order of id
+   vector<Device>& devices;
+
    public:
 
    // thresholds takes the lower bound for the ith threshold
@@ -31,8 +34,8 @@ class CacheController {
    CacheController(Graph& g, const int& n, const int& c, const double& epsilon, 
                    const int& num_thresholds, const int& threshold_size,
                    const double& top_rate, const double& rate_dec,
-                   FileRanking& file_ranking): file_ranking(file_ranking),
-                   graph (g), cache_graph (g, n, c, epsilon) {
+                   FileRanking& file_ranking, vector<Device>& devices): file_ranking(file_ranking),
+                   graph (g), cache_graph (g, n, c, epsilon), devices (devices) {
 
       int threshold_upper_bound = threshold_size - 1;
 
@@ -50,9 +53,7 @@ class CacheController {
    }
 
    // the initial setting of the file popularities and what devices cache them
-   // cache is the ith file to what devices should cache it
-   // file_pop takes the ith popularity spot to the file id
-   bool initialCache(map<int, vector<int> >& cache) {
+   bool initialCache(map<int, vector<Device> >& cache) {
 
       // what threshold we are at
       int t = 0;
@@ -80,10 +81,21 @@ class CacheController {
          if (this->cache_graph.cacheFile(this->file_ranking.getPopularFile(i), cache_hit_rates[t],
             cache_nodes)) {
 
-            
+            for (int i = 0; i < 
          }
 
       }
+   }
+
+   bool getCacheNodes(const int& file, vector<int>& cache_nodes) {
+
+      return this->cache_graph.getCacheNodes(file, cache_nodes);
+   }
+
+   void getDevices(vector<int>& device_ids, vector<Device>& ds) {
+
+      
+
    }
 
    friend ostream& operator<<(ostream&, const CacheController&);
