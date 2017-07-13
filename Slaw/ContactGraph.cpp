@@ -9,7 +9,8 @@
 #include <list>
 #include <cmath>
 #include <map>
-#include "../ContactGraph/ContactGraph.cpp"
+#include "Locations.cpp"
+#include "ContactGraphUtil.cpp"
 
 using namespace std;
 

@@ -5,13 +5,8 @@ using namespace std;
 void contactGraphFromLocation(const int& n, const int& radius, const string& input,
                               const int& days, vector<vector <double>>& contact_graph) {
 
-   ifstream location_data;
-   location_data.open(input);
-
-   if (!location_data.good()) {
-
-      throw invalid_argument("File for contact graph does not exist");
-   }
+   // this will give us the locations
+   Locations loc (input, n);
 
    // time in simulation
    int time = 0;
@@ -23,33 +18,17 @@ void contactGraphFromLocation(const int& n, const int& radius, const string& inp
    int x, y;
 
    // locations of each device in a second
-   vector< pair<int, int> > locations (n, pair<int, int> (0, 0));
+   vector< pair<int, int> > locations;
 
    contact_graph = vector< vector<double>> (n, vector<double> (n, 0));
 
-   // now read in the location data
-  
-   string line;
-   stringstream line_strm;
+   // now compute contact events
 
-   while (getline(location_data, line)) {
+   for (int i = 0; i < 60*60*24*days; i++) {
 
-      // read in point
-      line_strm.clear();
-      line_strm.str(line);
-      line_strm >> x >> y;
+      if (loc.nextStep(locations)) {
 
-      locations[node] = make_pair(x, y);
-
-      if (node == (n - 1)) {
-
-         // we got to the end of a time step, update contact data
-         time++;
-
-         // break out if this was enough days
-         if (time > 60*60*24*days) break;
-
-         for (int i = 0; i < n; i++) {
+          for (int i = 0; i < n; i++) {
 
             // only check lower id nodes, since the graph is symmetric
 
@@ -66,11 +45,13 @@ void contactGraphFromLocation(const int& n, const int& radius, const string& inp
             }
          }
 
-         node = -1; // will be incremented to 0
+        
+      }
+      else {
 
-      } 
-
-      node++;
+         throw invalid_argument("There is not enough location data for the number of days "
+                                 "for computing the contact graph");
+      }
    }
 
    // normalize contact graph by total time
@@ -79,7 +60,7 @@ void contactGraphFromLocation(const int& n, const int& radius, const string& inp
 
       for (int j = 0; j < contact_graph[i].size(); j++) {
 
-         contact_graph[i][j] = contact_graph[i][j]/time;
+         contact_graph[i][j] = contact_graph[i][j]/(60*60*24*days);
       }
    }
 
