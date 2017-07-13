@@ -11,13 +11,22 @@
 #include <queue>
 #include <cmath>
 #include <list>
-#include "../ContactGraph/ContactGraph.cpp"
+#include "../Slaw/Locations.cpp"
+#include "../Slaw/ContactGraphUtil.cpp"
 #include "../Algorithms/Graph.cpp"
 #include "../Algorithms/GammaUtil.cpp"
 #include "../Algorithms/CacheGraph.cpp"
 #include "../Algorithms/Greedy.cpp"
 #include "CacheGraphMultiFile.cpp"
-#include "D2D.cpp"
+#include "FileRanking.cpp"
+#include "Device.cpp"
+#include "D2DController.cpp"
+#include "FileRequest.cpp"
+#include "DeviceRequest.cpp"
+#include "RequestController.cpp"
+#include "BaseStation.cpp"
+#include "CacheController.cpp"
+#include "D2DInstance.cpp"
 
 using namespace std;
 
@@ -68,7 +77,8 @@ int main(int argc, char** argv) {
 
    // get a contact graph from file
 
-   cout << "Computing contact graph from file " << locations_file << endl;
+   cout << "Computing contact graph from file " << locations_file << " over " << days
+        << " days" << endl;
 
    vector< vector<double> > contact_graph;
 
@@ -77,12 +87,16 @@ int main(int argc, char** argv) {
    Graph graph (contact_graph);   
 
    cout << "Beginning simulation with " << n << " devices, where the " << k
-        << " most popular of them are cached at any time." << endl;
+        << " most popular of them are cached at any time. Starting at the "
+        << days+1 << " day." << endl;
+
+   // start locations at days number of days
+   Locations loc (locations_file, n, days + 1);
 
    D2DInstance sim (n, m, zipf, r_prob, graph, cache_size, epsilon, radius,
-      num_thresholds, threshold_size, top_rate, rate_dec);
+      num_thresholds, threshold_size, top_rate, rate_dec, loc);
 
-   cout << sim;
+   //cout << sim;
 
    cout << "=== CACHE SIMULATION COMPLETE ===" << endl << endl;
 
