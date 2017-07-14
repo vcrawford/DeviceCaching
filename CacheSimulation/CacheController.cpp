@@ -38,7 +38,6 @@ public:
                    FileRanking& file_ranking): file_ranking(file_ranking),
                    graph (g), cache_graph (g, n, c, epsilon) {
 
-
       this->computeThresholds(num_thresholds, threshold_size, top_rate, rate_dec);
 
       this->initialCache();
@@ -47,6 +46,8 @@ public:
 
    bool computeThresholds(const int& num_thresholds, const int& threshold_size,
       const double& top_rate, const double& rate_dec) {
+
+      assert(top_rate - (rate_dec*(num_thresholds - 1)) > 0);
 
       int threshold_upper_bound = threshold_size - 1;
 
@@ -88,6 +89,8 @@ public:
          }
 
          // So we do need to cache this file at the threshold's rate
+
+         assert(t < cache_hit_rates.size());
 
          vector<int> file_cache_nodes;
 
@@ -138,14 +141,14 @@ ostream& operator<<(ostream& os, const CacheController& x) {
 
    os << endl;
 
-   os << " Cache hit rates: ";
+   os << " Theoretical cache hit rates: ";
 
    for (int i = 0; i < x.cache_hit_rates.size(); i++) {
 
       os << x.cache_hit_rates[i] << " ";
    }
 
-   os << " To cache: " << endl;
+   /**os << " To cache: " << endl;
 
    for (auto it = x.to_cache.begin(); it != x.to_cache.end(); it++) {
 
@@ -162,6 +165,7 @@ ostream& operator<<(ostream& os, const CacheController& x) {
    os << endl;
 
    os << x.cache_graph;
+   */
 
    os << endl;
 

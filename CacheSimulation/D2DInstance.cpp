@@ -26,6 +26,12 @@ class D2DInstance {
 
    int time;
 
+   // takes each file id to how many times it has been requested
+   map<int, int> num_requests;
+
+   // takes each file id to how many times it has been transferred D2D
+   map<int, int> cache_hit;
+
    public:
 
    // n is the number of devices
@@ -48,10 +54,8 @@ class D2DInstance {
 
       this->makeDevices(n);
 
-      // cache popular files
-
+      // add popular files to be multicasted
       this->cachePopular();
-
 
       this->time = 0;
 
@@ -77,7 +81,7 @@ class D2DInstance {
 
       while (this->cache_cont.takeNextToCache(file, device_ids)) {
 
-         this->bs.newMulticast(file, device_ids);
+         this->bs.newCache(file, device_ids);
       }
 
    }
@@ -90,17 +94,60 @@ class D2DInstance {
       // get new locations
       this->locations.nextStep(this->current_locations);
 
+      // give any new requests to BS or D2D
+      this->startTransmitNewRequest();
+
+      // to get any transmissions that have failed
+      // for example, devices moved away from each other
+      vector<D2DTransmission> failed;
+
+      this->d2d_cont.nextTimeStep(failed);
+
+      // give any failed D2D communications to the BS
+      this->bs.takeFailedD2D(failed);
+
       // have the BS updated any transmissions it has
       this->bs.nextTimeStep();
 
    }
 
+   // updates the total number of cache hits for this file
+   void countCacheHit(const int& file) {
+
+      //if (this->cache_hit.find(file) == this->cache_hit.end()) {
+
+      //   this->cache_hit.insert( make_pair(file, 0) );
+      //}
+
+      //this->cache_hit[file]++;
+   }
+
+   // updates the total number of requests that have occurred for each file
+   void countRequest(const int& file) {
+
+      //if (this->num_requests.find(file) == this->num_requests.end()) {
+
+      //   this->num_requests.insert( make_pair(file, 0) );
+      //}
+
+      //this->num_requests[file]++;
+   }
+
    // Check for new requests and give them to either the d2d controller or bs
-   bool getNewRequests() {
+   void startTransmitNewRequest() {
 
       int request_device, request_file;
 
       if (this->req_cont.getRequest(request_device, request_file)) {
+
+         // check if this device is already downloading the file
+         if (this->devices[request_device].isDownloading(request_file)) {
+
+            // don't want to do anything here, not possible
+            return;
+         }
+
+         this->countRequest(request_file);
 
          // set to true if we find a way to transfer the file other than by the BS
          bool transferred = false;
@@ -123,11 +170,16 @@ class D2DInstance {
 
                if (request_device == cache_nodes[i]) {
 
+                  this->countCacheHit(request_file);
+
                   transferred = true;
                   break;
                }
 
                if (this->d2d_cont.tryD2D(cache_nodes[i], request_device, request_file)) {
+
+                  // TODO: change this to completed D2D
+                  this->countCacheHit(request_file);
 
                   // we can transfer this via D2D
                   transferred = true;
@@ -155,14 +207,30 @@ ostream& operator<<(ostream& os, D2DInstance& x) {
 
    os << x.cache_cont;
 
-   for (int i = 0; i < x.devices.size(); i++) {
+   //for (int i = 0; i < x.devices.size(); i++) {
 
-      os << x.devices[i];
+   //   os << x.devices[i];
+   //}
+
+   //os << endl;
+
+   os << "<Experimetal cache hit rates>" << endl;
+
+   for (auto it = x.cache_hit.begin(); it != x.cache_hit.end(); it++) {
+
+      os << "File " << it->first << " has " << it->second << " cache hits" << endl;
    }
 
-   os << endl;
+   for (auto it = x.num_requests.begin(); it != x.num_requests.end(); it++) {
+
+      os << "File " << it->first << " has " << it->second << " requests" << endl;
+   }
+
+   //for (auto it = x.cache_hit.begin(); it != x.cache_hit.end(); it++) {
+
+   //   os << " File " << it->first << ": " << double(it->second)/x.num_requests[it->first]
+   //      << endl;
+   //}
 
    return os;
 }
-
-

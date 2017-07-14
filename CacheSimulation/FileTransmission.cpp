@@ -4,7 +4,7 @@ class BSTransmission {
 
 public:
 
-   static constexpr double rate = 0.001;
+   double rate = 0.001;
 };
 
 class SingleBSTransmission: public BSTransmission {
@@ -21,13 +21,13 @@ public:
 
    bool nextTimeStep(const int& rbs) {
 
-      return this->device.addFile(this->file, BSTransmission::rate*rbs);
+      return this->device.downloadFile(this->file, BSTransmission::rate*rbs, false);
 
    }
 
 };
 
-class MulticastBSTransmission: public BSTransmission {
+class CacheBSTransmission: public BSTransmission {
 
 public:
 
@@ -35,7 +35,7 @@ public:
 
    int file;
 
-   MulticastBSTransmission (vector< reference_wrapper<Device> >& devices, const int& file): file(file) {
+   CacheBSTransmission (vector< reference_wrapper<Device> >& devices, const int& file): file(file) {
 
       this->file = file;
 
@@ -48,10 +48,13 @@ public:
       bool all_complete = true;
 
       for (auto it = this->devices.begin(); it != this->devices.end(); it++) {
- 
-         bool single_complete = it->get().addFile(this->file, BSTransmission::rate*rbs);
 
-         all_complete = single_complete && all_complete;
+         if (!it->get().hasFile(this->file)) {
+
+            bool single_complete = it->get().downloadFile(this->file, BSTransmission::rate*rbs, true);
+
+            all_complete = single_complete && all_complete;
+         }
       }
 
       return all_complete;
@@ -63,7 +66,7 @@ class D2DTransmission {
 
 public:
 
-   static constexpr double rate = 0.03;
+   double rate = 0.03;
 
    Device& device_send;
 
@@ -73,6 +76,14 @@ public:
 
    D2DTransmission(Device& device_send, Device& device_rec, int file):
       device_send (device_send), device_rec (device_rec), file (file) {
+
+      assert (this->device_send.hasFile(this->file));
+
+   }
+
+   bool nextTimeStep() {
+
+      return device_rec.downloadFile(this->file, D2DTransmission::rate, false);
 
    }
 

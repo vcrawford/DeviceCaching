@@ -12,6 +12,7 @@
 #include <cmath>
 #include <list>
 #include <functional>
+#include <cassert>
 #include "../Slaw/Locations.cpp"
 #include "../Slaw/ContactGraphUtil.cpp"
 #include "../Algorithms/Graph.cpp"
@@ -99,12 +100,12 @@ int main(int argc, char** argv) {
    D2DInstance sim (n, m, zipf, r_prob, graph, cache_size, epsilon, radius,
       num_thresholds, threshold_size, top_rate, rate_dec, loc);
 
-   for (int i = 0; i < 3; i++) {
+   for (int i = 0; i < 1000; i++) {
 
       sim.nextTimeStep();
    }
 
-   cout << sim;
+   //cout << sim;
 
    cout << "=== CACHE SIMULATION COMPLETE ===" << endl << endl;
 

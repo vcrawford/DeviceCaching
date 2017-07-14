@@ -24,10 +24,49 @@ class D2DController {
 
    double getDistance(const int& device_1, const int& device_2) {
 
+      assert ((device_1 < this->current_locations.size()) && (device_2 < this->current_locations.size()));
+
        pair<int, int> loc_1 = this->current_locations[device_1];
        pair<int, int> loc_2 = this->current_locations[device_2];
 
        return sqrt(pow(loc_1.first - loc_2.first, 2.0) + pow(loc_1.second - loc_2.second, 2.0));
+   }
+
+   // update all D2D transmissions
+   // if any fail (for example, out of range) then add them to failed and remove
+   // them from self
+   void nextTimeStep(vector<D2DTransmission>& failed) {
+
+      failed.clear();
+ 
+      for (auto it = this->in_transmission.begin(); it != this->in_transmission.end(); it++) {
+
+         // have the devices moved out of range?
+
+         if (!this->withinRadius(it->device_send.id, it->device_rec.id)) {
+
+            failed.push_back(*it);
+
+            it = this->in_transmission.erase(it);
+
+            break;
+         }
+         else {
+
+            // now just have them transmit more of the file
+            // remove if finished
+
+            bool completed;
+
+            completed = it->nextTimeStep();
+
+            if (completed) {
+
+               it = this->in_transmission.erase(it);
+            }
+         }
+      }
+
    }
 
    // go through in_transmission to see if a certain device is already transmitting

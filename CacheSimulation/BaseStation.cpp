@@ -14,7 +14,7 @@ class BaseStation {
    // all current transmissions from BS to device
    // may be to single device, or multicast
    list<SingleBSTransmission> in_transmission;
-   list<MulticastBSTransmission> in_transmission_MC;
+   list<CacheBSTransmission> in_transmission_MC;
 
    public:
 
@@ -31,19 +31,44 @@ class BaseStation {
 
          for (auto it = this->in_transmission.begin(); it != this->in_transmission.end(); it++) {
 
-             it->nextTimeStep(rbs);
+            bool completed;
+
+            completed = it->nextTimeStep(rbs);
+
+            if (completed) {
+
+               it = this->in_transmission.erase(it);
+            }
          }
 
          for (auto it = this->in_transmission_MC.begin(); it != this->in_transmission_MC.end(); it++) {
 
-            it->nextTimeStep(rbs);
+            bool completed;
+
+            completed = it->nextTimeStep(rbs);
+
+            if (completed) {
+
+               it = this->in_transmission_MC.erase(it);
+            }
          }
       }
 
    }
 
+   // any D2D communications that have failed will have the rest of
+   // the file delivered by the BS
+   void takeFailedD2D(vector<D2DTransmission>& failed) {
+
+      for (int i = 0; i < failed.size(); i++) {
+
+         this->newRequest(failed[i].device_rec.id, failed[i].file);
+      }
+
+   }
+
    // do multicast of a file to a bunch of devices
-   void newMulticast(const int& file, const vector<int>& device_ids) {
+   void newCache(const int& file, const vector<int>& device_ids) {
 
       // get devices corresponding to those ids
       vector< reference_wrapper<Device> > multicast_devices;
@@ -53,12 +78,14 @@ class BaseStation {
          multicast_devices.push_back(this->devices[device_ids[i]]);
       }
 
-      this->in_transmission_MC.push_back( MulticastBSTransmission (multicast_devices, file) );
+      this->in_transmission_MC.push_back( CacheBSTransmission (multicast_devices, file) );
 
    }
 
    // send file to device
    void newRequest(const int& device_id, const int& file) {
+
+      assert ((device_id < this->devices.size()) && (device_id >= 0));
 
       this->in_transmission.push_back( SingleBSTransmission (this->devices[device_id], file) );
 
