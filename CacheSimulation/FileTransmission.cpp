@@ -1,20 +1,15 @@
-// represents a transmission of file, either D2D or from the BS
+// Represents a transmission occurring, either by BS or D2D
 
-class FileTransmission {
+class BSTransmission {
 
-   protected:
+public:
 
-   // the rate this transmission is occurring at, in parts of a whole file
-   // i.e. 0.5 would imply 2 seconds to transmit 
    static constexpr double rate = 0.001;
-
-   FileTransmission() { }
-
 };
 
-class BSTransmission: public FileTransmission {
+class SingleBSTransmission: public BSTransmission {
 
-   static constexpr double rate = 0.001;
+public:
 
    // what device the BS is transferring files to
    Device& device;
@@ -22,34 +17,51 @@ class BSTransmission: public FileTransmission {
    // what file is being transferred
    int file;
 
-   public:
+   SingleBSTransmission(Device& device, int file): device(device), file(file) { }
 
-   BSTransmission(Device& device, int file): device(device), file(file) { }
+   bool nextTimeStep(const int& rbs) {
 
-};
-
-class MulticastBSTransmission: public FileTransmission {
-
-   static constexpr double rate = 0.001;
-
-   vector<Device*> devices;
-
-   int file;
-
-   public:
-
-   MulticastBSTransmission (vector<Device>& devices, const int& file): file(file) {
-
-      for (int i = 0; i < devices.size(); i++) {
-
-         this->devices.push_back(&devices[i]);
-      }
+      return this->device.addFile(this->file, BSTransmission::rate*rbs);
 
    }
 
 };
 
-class D2DTransmission: public FileTransmission {
+class MulticastBSTransmission: public BSTransmission {
+
+public:
+
+   vector<reference_wrapper<Device>> devices;
+
+   int file;
+
+   MulticastBSTransmission (vector< reference_wrapper<Device> >& devices, const int& file): file(file) {
+
+      this->file = file;
+
+      this->devices = devices;
+
+   }
+
+   bool nextTimeStep(const int& rbs) {
+
+      bool all_complete = true;
+
+      for (auto it = this->devices.begin(); it != this->devices.end(); it++) {
+ 
+         bool single_complete = it->get().addFile(this->file, BSTransmission::rate*rbs);
+
+         all_complete = single_complete && all_complete;
+      }
+
+      return all_complete;
+   }
+
+};
+
+class D2DTransmission {
+
+public:
 
    static constexpr double rate = 0.03;
 
@@ -58,8 +70,6 @@ class D2DTransmission: public FileTransmission {
    Device& device_rec;
 
    int file;
-
-   public:
 
    D2DTransmission(Device& device_send, Device& device_rec, int file):
       device_send (device_send), device_rec (device_rec), file (file) {

@@ -42,8 +42,6 @@ class CacheGraphMultiFile {
 
       if (greedy(this->cache_graphs.at(file_id), nodes, p, this->epsilon) >= p - this->epsilon) {
 
-         cout << nodes.size() << endl;
-
          this->cache_graphs.at(file_id).addCacheNodes(nodes);
 
          for (int i = 0; i < nodes.size(); i++) {
@@ -92,7 +90,9 @@ class CacheGraphMultiFile {
 
 ostream& operator<<(ostream& os, const CacheGraphMultiFile& x) {
 
-   os << "Cache space left: ";
+   os << "Cache graph" << endl;
+
+   os << " Cache space left: ";
 
    for (int i = 0; i < x.available_cache.size(); i++) {
 
@@ -101,7 +101,7 @@ ostream& operator<<(ostream& os, const CacheGraphMultiFile& x) {
 
    os << endl;
 
-   os << "Can cache: ";
+   os << " Can cache: ";
 
    for (int i = 0; i < x.can_cache.size(); i++) {
 
@@ -113,7 +113,7 @@ ostream& operator<<(ostream& os, const CacheGraphMultiFile& x) {
 
    os << endl;
 
-   os << "Cache graphs: ";
+   os << " Cache graphs: ";
 
    os << endl;
 

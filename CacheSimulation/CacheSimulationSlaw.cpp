@@ -11,6 +11,7 @@
 #include <queue>
 #include <cmath>
 #include <list>
+#include <functional>
 #include "../Slaw/Locations.cpp"
 #include "../Slaw/ContactGraphUtil.cpp"
 #include "../Algorithms/Graph.cpp"
@@ -20,6 +21,7 @@
 #include "CacheGraphMultiFile.cpp"
 #include "FileRanking.cpp"
 #include "Device.cpp"
+#include "FileTransmission.cpp"
 #include "D2DController.cpp"
 #include "FileRequest.cpp"
 #include "DeviceRequest.cpp"
@@ -86,9 +88,10 @@ int main(int argc, char** argv) {
 
    Graph graph (contact_graph);   
 
-   cout << "Beginning simulation with " << n << " devices, where the " << k
-        << " most popular of them are cached at any time. Starting at the "
-        << days+1 << " day." << endl;
+   cout << "Beginning simulation with " << n << " devices, where the "
+        << num_thresholds*threshold_size
+        << " most popular of them are cached at any time. Starting on day "
+        << days+1 << endl;
 
    // start locations at days number of days
    Locations loc (locations_file, n, days + 1);
@@ -96,7 +99,12 @@ int main(int argc, char** argv) {
    D2DInstance sim (n, m, zipf, r_prob, graph, cache_size, epsilon, radius,
       num_thresholds, threshold_size, top_rate, rate_dec, loc);
 
-   //cout << sim;
+   for (int i = 0; i < 3; i++) {
+
+      sim.nextTimeStep();
+   }
+
+   cout << sim;
 
    cout << "=== CACHE SIMULATION COMPLETE ===" << endl << endl;
 
