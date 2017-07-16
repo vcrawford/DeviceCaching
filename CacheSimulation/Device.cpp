@@ -15,7 +15,6 @@ class Device {
    // others are gotten rid of once they user has the full file
    map<int, double> stored_files;
 
-
    // m is the number of files
    // initializes with 0 of every file
    Device(const int& id): id(id) {}
@@ -52,7 +51,10 @@ class Device {
          this->stored_files.insert( make_pair(file, 0) );
       }
 
-      assert(this->stored_files[file] != 1);
+      cout << "Device " << this->id << " has " << this->stored_files.at(file) << " of "
+      << file << endl << flush;
+
+      assert (this->stored_files[file] != 1);
 
       this->stored_files[file] += how_much;
 

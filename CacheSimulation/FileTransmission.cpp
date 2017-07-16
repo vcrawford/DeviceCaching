@@ -1,4 +1,3 @@
-// Represents a transmission occurring, either by BS or D2D
 
 class BSTransmission {
 
@@ -82,6 +81,9 @@ public:
    }
 
    bool nextTimeStep() {
+
+      cout << this->device_send.id << " is sending file " << this->file << " to device "
+         << this->device_rec.id << endl;
 
       return device_rec.downloadFile(this->file, D2DTransmission::rate, false);
 

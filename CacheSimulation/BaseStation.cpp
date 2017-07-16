@@ -23,25 +23,35 @@ class BaseStation {
    // update everything over a second
    void nextTimeStep() {
 
+      cout << "New time step for the BS" << endl;
+
       if ((this->in_transmission.size() != 0) || (this->in_transmission_MC.size() != 0)) {
 
+         cout << "There are " << this->in_transmission.size() + this->in_transmission_MC.size()
+            << " things being transmitted by the BS" << endl;
          // the number of resource blocks each communication should get
          // just split them up equally
          int rbs = BaseStation::NUM_RBS/(this->in_transmission.size() + this->in_transmission_MC.size());
 
-         for (auto it = this->in_transmission.begin(); it != this->in_transmission.end(); it++) {
+         cout << "Each communication will be allotted " << rbs << " resource blocks" << endl;
+
+         for (auto it = this->in_transmission.begin(); it != this->in_transmission.end();) {
 
             bool completed;
 
             completed = it->nextTimeStep(rbs);
 
             if (completed) {
+
+               cout << "The BS giving file " << it->file << " to device " << it->device.id
+                  << " is complete" << endl;
 
                it = this->in_transmission.erase(it);
             }
+            else it++;
          }
 
-         for (auto it = this->in_transmission_MC.begin(); it != this->in_transmission_MC.end(); it++) {
+         for (auto it = this->in_transmission_MC.begin(); it != this->in_transmission_MC.end(); it) {
 
             bool completed;
 
@@ -49,8 +59,12 @@ class BaseStation {
 
             if (completed) {
 
+               cout << "The multicast of file " << it->file << " to " << it->devices.size()
+                  << " devices is complete " << endl;
+
                it = this->in_transmission_MC.erase(it);
             }
+            else it++;
          }
       }
 
@@ -61,6 +75,9 @@ class BaseStation {
    void takeFailedD2D(vector<D2DTransmission>& failed) {
 
       for (int i = 0; i < failed.size(); i++) {
+
+         cout << "The BS is taking over failed D2D transmission of file " << failed[i].file
+            << " to device " << failed[i].device_rec.id << endl;
 
          this->newRequest(failed[i].device_rec.id, failed[i].file);
       }
@@ -78,12 +95,17 @@ class BaseStation {
          multicast_devices.push_back(this->devices[device_ids[i]]);
       }
 
+      cout << "Adding transmission of file " << file << " to " << multicast_devices.size()
+         << " devices to BS transmissions" << endl;
+
       this->in_transmission_MC.push_back( CacheBSTransmission (multicast_devices, file) );
 
    }
 
    // send file to device
    void newRequest(const int& device_id, const int& file) {
+
+      cout << "BS has received request for file " << file << " from device " << device_id << endl;
 
       assert ((device_id < this->devices.size()) && (device_id >= 0));
 

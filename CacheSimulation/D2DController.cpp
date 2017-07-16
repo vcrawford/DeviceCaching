@@ -37,13 +37,21 @@ class D2DController {
    // them from self
    void nextTimeStep(vector<D2DTransmission>& failed) {
 
+      cout << "Next time step for D2D controller" << endl;
+
+      cout << "There are " << this->in_transmission.size()
+         << " d2d communications currently" << endl;
+
       failed.clear();
  
-      for (auto it = this->in_transmission.begin(); it != this->in_transmission.end(); it++) {
+      for (auto it = this->in_transmission.begin(); it != this->in_transmission.end();) {
 
          // have the devices moved out of range?
 
          if (!this->withinRadius(it->device_send.id, it->device_rec.id)) {
+
+            cout << "Device " << it->device_send.id << " and device " << it->device_rec.id
+               << " are no longer in contact.";
 
             failed.push_back(*it);
 
@@ -62,8 +70,12 @@ class D2DController {
 
             if (completed) {
 
+               cout << "Transmission between " << it->device_send << " and " << it->device_rec
+                  << " is complete" << endl;
+
                it = this->in_transmission.erase(it);
             }
+            else it++;
          }
       }
 
@@ -122,9 +134,14 @@ class D2DController {
    // data is assumed to go from device_1 to device_2
    bool tryD2D(const int& device_1, const int& device_2, const int& file) {
 
+      cout << "Seeing if possible D2D connection between devices " << device_1 << " and "
+         << device_2 << endl;
+
       // is device_1 already transmitting?
 
       if (this->isTransmitting(this->devices[device_1])) {
+
+         cout << "No, because " << device_1 << " is already transmitting." << endl;
 
          return false;
       }
@@ -133,6 +150,8 @@ class D2DController {
 
       if (this->canHear(device_2)) {
 
+         cout << "No, because " << device_2 << " is in range of another communication" << endl;
+
          return false;
       }
 
@@ -140,10 +159,16 @@ class D2DController {
 
       if (this->withinRadius(device_1, device_2)) {
 
+         cout << "D2D communication is possible" << endl;
+
          this->in_transmission.push_back( D2DTransmission(this->getDevice(device_1),
             this->getDevice(device_2), file) );         
 
          return true;
+      }
+      else {
+
+         cout << "No, because they are not within the radius of each other" << endl;
       }
 
       return false;

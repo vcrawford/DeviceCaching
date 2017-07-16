@@ -52,6 +52,8 @@ class D2DInstance {
       cache_cont (g, n, cache_size, epsilon, num_thresholds, threshold_size,
       top_rate, rate_dec, file_rank), time (0), locations (locations) {
 
+      cout << "D2D instance starting ..." << endl;
+
       this->makeDevices(n);
 
       // add popular files to be multicasted
@@ -70,6 +72,8 @@ class D2DInstance {
          this->devices.push_back(Device(i));
       }
 
+      cout << num << " devices in the D2D instance" << endl;
+
    }
 
    // get any caching that must be done for popular files
@@ -82,12 +86,17 @@ class D2DInstance {
       while (this->cache_cont.takeNextToCache(file, device_ids)) {
 
          this->bs.newCache(file, device_ids);
+
+         cout << "File " << file << " has been given to the BS to be cached on "
+            << device_ids.size() << " devices." << endl;
       }
 
    }
 
    // take the entire simulation to the next time step
    void nextTimeStep() {
+
+      cout << "***Beginning next time step ..." << endl;
 
       this->time++;
 
@@ -140,17 +149,29 @@ class D2DInstance {
 
       if (this->req_cont.getRequest(request_device, request_file)) {
 
+         cout << "Random request: file " << request_file << " from device "
+            << request_device << endl;
+
          // check if this device is already downloading the file
          if (this->devices[request_device].isDownloading(request_file)) {
 
             // don't want to do anything here, not possible
+            cout << "This device is actually already downloading that file" << endl;
+
             return;
          }
 
          this->countRequest(request_file);
 
-         // set to true if we find a way to transfer the file other than by the BS
-         bool transferred = false;
+         // first of all, see if this device has the file cached
+         if (this->devices[request_device].hasFile(request_file)) {
+ 
+            this->countCacheHit(request_file);
+
+            cout << "The requesting device has the file cached" << endl;
+
+            return;
+         }
 
          // get all ids of devices caching this file
          vector<int> cache_nodes;
@@ -163,36 +184,30 @@ class D2DInstance {
             }
          }
 
+         cout << "There are " << cache_nodes.size() << " nodes that cache this file" << endl;
+
          // if there are any, attempt d2d file transfer
          if (cache_nodes.size() != 0) {
 
             for (int i = 0; i < cache_nodes.size(); i++) {
 
-               if (request_device == cache_nodes[i]) {
-
-                  this->countCacheHit(request_file);
-
-                  transferred = true;
-                  break;
-               }
-
                if (this->d2d_cont.tryD2D(cache_nodes[i], request_device, request_file)) {
+
+                  cout << "The requesting device may receive this from D2D from device "
+                     << cache_nodes[i] << endl;
 
                   // TODO: change this to completed D2D
                   this->countCacheHit(request_file);
 
-                  // we can transfer this via D2D
-                  transferred = true;
-                  break;
+                  return;
                }
             }
          }
 
-         // if d2d was not successful, just give to BS
-         if (!transferred) {
+         // d2d was not successful
 
-            this->bs.newRequest(request_device, request_file);
-         }
+         cout << "The requesting device may receive this file from the BS" << endl;
+         this->bs.newRequest(request_device, request_file);
       }
 
    }

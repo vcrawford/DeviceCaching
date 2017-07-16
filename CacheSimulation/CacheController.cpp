@@ -49,16 +49,21 @@ public:
 
       assert(top_rate - (rate_dec*(num_thresholds - 1)) > 0);
 
-      int threshold_upper_bound = threshold_size - 1;
+      int threshold_lower_bound = threshold_size - 1;
 
       double cache_hit_rate = top_rate;
 
+      cout << "Cache controller is computing thresholds " << endl;
+
       for (int i = 0; i < num_thresholds; i++) {
 
-         this->thresholds.push_back(threshold_upper_bound);
+         this->thresholds.push_back(threshold_lower_bound);
          this->cache_hit_rates.push_back(cache_hit_rate);
 
-         threshold_upper_bound += threshold_size;
+         cout << "Threshold for files above popularity rank " << threshold_lower_bound
+            << " with cache hit rate " << cache_hit_rate << endl;
+
+         threshold_lower_bound += threshold_size;
          cache_hit_rate -= rate_dec;
       }
 
@@ -66,6 +71,8 @@ public:
 
    // the initial setting of the file popularities and what devices cache them
    bool initialCache() {
+
+      cout << "Cache controller computing initial cache" << endl;
 
       // what threshold we are at
       int t = 0;
@@ -97,6 +104,16 @@ public:
          if (this->cache_graph.cacheFile(this->file_ranking.getPopularFile(i), cache_hit_rates[t],
             file_cache_nodes)) {
 
+            cout << "Should cache file " << this->file_ranking.getPopularFile(i) << " at rate "
+               << cache_hit_rates[t] << ". corresponding to nodes ";
+
+            for (int i = 0; i < file_cache_nodes.size(); i++){
+
+               cout << file_cache_nodes[i] << ", ";
+            }
+
+            cout << endl;
+
             this->to_cache.insert( make_pair(this->file_ranking.getPopularFile(i), file_cache_nodes) );
          }
       }
@@ -117,6 +134,8 @@ public:
          device_ids = it->second;
 
          to_cache.erase(it);
+
+         cout << "File " << file << " is taken off the cache controller list to cache" << endl;
 
          return true;
       }
