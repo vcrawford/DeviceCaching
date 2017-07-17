@@ -44,8 +44,9 @@ int main(int argc, char** argv) {
    // number of files that should be cached at any time (assumed to be the most popular k)
    int k = stoi(argv[3]);
 
-   // probability that there is a request for a file during any second
-   double r_prob = stof(argv[4]);
+   // probability that there is a request for a file during any second per device
+   // at the busiest time of day
+   double dev_req = stof(argv[4]);
 
    // the file that has the locations for all of our devices
    string locations_file = argv[5];
@@ -76,6 +77,8 @@ int main(int argc, char** argv) {
    // how many files a device can cache
    int cache_size = stoi(argv[15]);
 
+   bool evolve = (stoi(argv[16]) == 1);
+
    cout << endl << "=== Cache Simulation ===" << endl;
 
    // get a contact graph from file
@@ -92,20 +95,24 @@ int main(int argc, char** argv) {
    cout << "Beginning simulation with " << n << " devices, where the "
         << num_thresholds*threshold_size
         << " most popular of them are cached at any time. Starting on day "
-        << days+1 << endl;
+        << days << endl;
 
    // start locations at days number of days
-   Locations loc (locations_file, n, days + 1);
+   Locations loc (locations_file, n, days);
 
-   D2DInstance sim (n, m, zipf, r_prob, graph, cache_size, epsilon, radius,
-      num_thresholds, threshold_size, top_rate, rate_dec, loc);
+   D2DInstance sim (n, m, zipf, dev_req, graph, cache_size, epsilon, radius,
+      num_thresholds, threshold_size, top_rate, rate_dec, loc, evolve);
 
-   for (int i = 0; i < 1000; i++) {
+   int time = 0;
 
-      sim.nextTimeStep();
-   }
+   while (sim.nextTimeStep()) {
 
-   //cout << sim;
+      time++;
+   };
+
+   cout << "Simulation ran for " << time/86400 << " days." << endl;
+
+   cout << sim;
 
    cout << "=== CACHE SIMULATION COMPLETE ===" << endl << endl;
 

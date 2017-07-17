@@ -3,20 +3,20 @@
 n=130
 m=1000
 k=1
-r_prob=0.1
+dev_req=0.001
 locations_file=SlawLocation/1/location_1499459583.txt
 results_file=output.xml
 radius=20
-zipf=1
+zipf=0.56
 contact_days=3
-simulation_start_day=6
 epsilon=0.001
-num_thresholds=5
-threshold_size=3
-top_rate=0.9
-rate_dec=0.2
+num_thresholds=14
+threshold_size=10
+top_rate=0.8
+rate_dec=0.05
 cache_size=10
+evolve=1
 
-CacheSimulation/CacheSimulationSlaw $n $m $k $r_prob $locations_file $results_file $radius $zipf $contact_days $epsilon $num_thresholds $threshold_size $top_rate $rate_dec $cache_size
+CacheSimulation/CacheSimulationSlaw $n $m $k $dev_req $locations_file $results_file $radius $zipf $contact_days $epsilon $num_thresholds $threshold_size $top_rate $rate_dec $cache_size $evolve
 
 

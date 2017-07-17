@@ -7,7 +7,7 @@ class CacheController {
 
    // holds the threshold for each cache rate
    // i.e., the ith entry is the min popularity place to get the
-   // ith hit rate
+   // ith hit rate (sorted from smallest to largest)
    vector<int> thresholds;
 
    // holds the cache hit probability for the ith threshold
@@ -53,14 +53,14 @@ public:
 
       double cache_hit_rate = top_rate;
 
-      cout << "Cache controller is computing thresholds " << endl;
+      clog << "Cache controller is computing thresholds " << endl;
 
       for (int i = 0; i < num_thresholds; i++) {
 
          this->thresholds.push_back(threshold_lower_bound);
          this->cache_hit_rates.push_back(cache_hit_rate);
 
-         cout << "Threshold for files above popularity rank " << threshold_lower_bound
+         clog << "Threshold for files above popularity rank " << threshold_lower_bound
             << " with cache hit rate " << cache_hit_rate << endl;
 
          threshold_lower_bound += threshold_size;
@@ -69,10 +69,28 @@ public:
 
    }
 
+   // get the cache hit rate that a file should be cached at
+   double getTheoreticalCacheHitRate(const int& file_id) {
+
+      int ranking = this->file_ranking.getRanking(file_id); 
+
+      for (int i = 0; i < this->thresholds.size(); i++) {
+
+         if (ranking <= thresholds[i]) {
+
+            return this->cache_hit_rates[i];
+         }
+      }
+
+      // did not meet any threshold
+      return 0;
+
+   }
+
    // the initial setting of the file popularities and what devices cache them
    bool initialCache() {
 
-      cout << "Cache controller computing initial cache" << endl;
+      clog << "Cache controller computing initial cache" << endl;
 
       // what threshold we are at
       int t = 0;
@@ -104,15 +122,15 @@ public:
          if (this->cache_graph.cacheFile(this->file_ranking.getPopularFile(i), cache_hit_rates[t],
             file_cache_nodes)) {
 
-            cout << "Should cache file " << this->file_ranking.getPopularFile(i) << " at rate "
+            clog << "Should cache file " << this->file_ranking.getPopularFile(i) << " at rate "
                << cache_hit_rates[t] << ". corresponding to nodes ";
 
             for (int i = 0; i < file_cache_nodes.size(); i++){
 
-               cout << file_cache_nodes[i] << ", ";
+               clog << file_cache_nodes[i] << ", ";
             }
 
-            cout << endl;
+            clog << endl;
 
             this->to_cache.insert( make_pair(this->file_ranking.getPopularFile(i), file_cache_nodes) );
          }
@@ -134,8 +152,6 @@ public:
          device_ids = it->second;
 
          to_cache.erase(it);
-
-         cout << "File " << file << " is taken off the cache controller list to cache" << endl;
 
          return true;
       }

@@ -17,10 +17,24 @@ class D2DController {
    // current locations of all devices
    vector< pair<int, int> >& current_locations;
 
-   public:
+public:
+
+   // takes the file to the number of successful D2D transmissions
+   map<int, int> success;
 
    D2DController(vector<Device>& devices, const int& radius, vector< pair<int, int> >& current_locations)
       : devices (devices), radius (radius), current_locations (current_locations) { }
+
+   // updates the total number of cache hits for this file
+   void countSuccess(const int& file) {
+
+      if (this->success.find(file) == this->success.end()) {
+
+         this->success.insert( make_pair(file, 0) );
+      }
+
+      this->success[file]++;
+   }
 
    double getDistance(const int& device_1, const int& device_2) {
 
@@ -37,10 +51,8 @@ class D2DController {
    // them from self
    void nextTimeStep(vector<D2DTransmission>& failed) {
 
-      cout << "Next time step for D2D controller" << endl;
-
-      cout << "There are " << this->in_transmission.size()
-         << " d2d communications currently" << endl;
+      clog << "There are " << this->in_transmission.size()
+         << " d2d communications currently." << endl;
 
       failed.clear();
  
@@ -50,8 +62,8 @@ class D2DController {
 
          if (!this->withinRadius(it->device_send.id, it->device_rec.id)) {
 
-            cout << "Device " << it->device_send.id << " and device " << it->device_rec.id
-               << " are no longer in contact.";
+            clog << "Device " << it->device_send.id << " and device " << it->device_rec.id
+               << " are no longer in contact. D2D fail.";
 
             failed.push_back(*it);
 
@@ -70,8 +82,10 @@ class D2DController {
 
             if (completed) {
 
-               cout << "Transmission between " << it->device_send << " and " << it->device_rec
-                  << " is complete" << endl;
+               clog << "Transmission between " << it->device_send.id << " and "
+                  << it->device_rec.id << " is complete" << endl;
+
+               this->countSuccess(it->file);
 
                it = this->in_transmission.erase(it);
             }
@@ -134,14 +148,9 @@ class D2DController {
    // data is assumed to go from device_1 to device_2
    bool tryD2D(const int& device_1, const int& device_2, const int& file) {
 
-      cout << "Seeing if possible D2D connection between devices " << device_1 << " and "
-         << device_2 << endl;
-
       // is device_1 already transmitting?
 
       if (this->isTransmitting(this->devices[device_1])) {
-
-         cout << "No, because " << device_1 << " is already transmitting." << endl;
 
          return false;
       }
@@ -150,8 +159,6 @@ class D2DController {
 
       if (this->canHear(device_2)) {
 
-         cout << "No, because " << device_2 << " is in range of another communication" << endl;
-
          return false;
       }
 
@@ -159,21 +166,19 @@ class D2DController {
 
       if (this->withinRadius(device_1, device_2)) {
 
-         cout << "D2D communication is possible" << endl;
+         clog << "D2D transmission of file " << file << " from device " << device_1
+            << " to " << device_2 << " initiated" << endl;
 
          this->in_transmission.push_back( D2DTransmission(this->getDevice(device_1),
             this->getDevice(device_2), file) );         
 
          return true;
       }
-      else {
-
-         cout << "No, because they are not within the radius of each other" << endl;
-      }
 
       return false;
 
    }
+
 
 };
 
