@@ -14,9 +14,9 @@ class Graph {
 
    public:
 
-      // matrix where the ith, jth entry is a float representing the
+      // matrix where the ith, jth entry is a double representing the
       // edge between the ith and jth nodes
-      vector< vector<float> > edge_matrix;
+      vector< vector<double> > edge_matrix;
 
       // vector that takes the ith node to a vector of its neighbors
       vector< vector<int> > neighbors;
@@ -25,7 +25,7 @@ class Graph {
       Graph() {}
 
       // Pass in the edge_matrix
-      Graph(vector< vector<float> >& matrix) {
+      Graph(vector< vector<double> >& matrix) {
 
          this->edge_matrix = matrix;
 
@@ -46,8 +46,8 @@ class Graph {
             stringstream line_strm;
             line_strm.str(line);
 
-            vector<float> edge_weights;
-            float edge_weight;
+            vector<double> edge_weights;
+            double edge_weight;
 
             while (line_strm >> edge_weight) {
 
@@ -112,7 +112,7 @@ class Graph {
       }
 
       // Return the weight of the edge between node i and node j
-      float getEdgeWeight(const int& i, const int& j) const {
+      double getEdgeWeight(const int& i, const int& j) const {
 
          return this->edge_matrix[i][j];
       }

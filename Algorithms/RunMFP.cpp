@@ -37,7 +37,15 @@ int main(int argc, char** argv) {
    // get contact graph
    Graph graph = Graph(contact_filename);
    int n = graph.getNodeCount();
-   CacheGraph cg = CacheGraph(graph);
+
+   vector<bool> can_cache;
+   // assume all nodes can cache
+   for (int i = 0; i < n; i++) {
+
+      can_cache.push_back(true);
+   }
+
+   CacheGraph cg = CacheGraph(graph, can_cache);
 
    // Time each algorithm
    int start, end;

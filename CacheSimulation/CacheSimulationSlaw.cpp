@@ -4,123 +4,118 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <string>
 #include <sstream>
 #include <random>
 #include <map>
 #include <queue>
-#include "D2D.cpp"
+#include <cmath>
+#include <list>
+#include <functional>
+#include <cassert>
+#include "../Slaw/Locations.cpp"
+#include "../Slaw/ContactGraphUtil.cpp"
+#include "../Algorithms/Graph.cpp"
+#include "../Algorithms/GammaUtil.cpp"
+#include "../Algorithms/CacheGraph.cpp"
+#include "../Algorithms/Greedy.cpp"
+#include "CacheGraphMultiFile.cpp"
+#include "FileRanking.cpp"
+#include "Device.cpp"
+#include "FileTransmission.cpp"
+#include "D2DController.cpp"
+#include "FileRequest.cpp"
+#include "DeviceRequest.cpp"
+#include "RequestController.cpp"
+#include "BaseStation.cpp"
+#include "CacheController.cpp"
+#include "D2DInstance.cpp"
 
 using namespace std;
 
 int main(int argc, char** argv) {
 
    // number of devices in this simulation
-   int n = atoi(argv[1]);
+   int n = stoi(argv[1]);
 
-   // random number generator for file request
-   mt19937 generator(random_device{}());
-   uniform_real_distribution<float> unif_0_1 (0, 1); // computing if there is a request at all
-   uniform_int_distribution<int> unif_n (0, n - 1); // which device requested the file
+   // number of potential cache files in this simulation
+   int m = stoi(argv[2]);
 
-   // devices that cache the file for greedy algorithm
-   ifstream cache_greedy;
-   cache_greedy.open("cache_greedy.txt");
+   // number of files that should be cached at any time (assumed to be the most popular k)
+   int k = stoi(argv[3]);
 
-   string cache_greedy_str;
-   getline(cache_greedy, cache_greedy_str);
+   // probability that there is a request for a file during any second per device
+   // at the busiest time of day
+   double dev_req = stof(argv[4]);
 
-   // search through the string and get all devices
-   vector<int> greedy_devices;
-   int search_start = 0;
-   int pos;
+   // the file that has the locations for all of our devices
+   string locations_file = argv[5];
 
-   while ((pos = cache_greedy_str.find(",", search_start)) != string::npos) {
+   // the file to output results to
+   string results_file = argv[6];
 
-      greedy_devices.push_back(stoi(cache_greedy_str.substr(search_start, pos - search_start)));
-      search_start = pos + 1;
-   }
+   // the radius that is considered in contact
+   int radius = stoi(argv[7]);
 
-   cache_greedy.close();
+   // parameter for our Zipf distribution
+   double zipf = stof(argv[8]);
 
-   // Simulate caching requests, where at each time step devices probabilistically request
-   // the file
-   ifstream location_data;
-   location_data.open("locations.txt");
+   // how many days are used for the contact graph computation
+   int days = stoi(argv[9]);
 
-   vector< pair<int, int> > locations; // the locations of the n devices
-   int node = 0; // which node we are looking at the location of in the loop
-   stringstream line_strm;
-   string line;
-   float request_probability = 0.015; // the probability that in a second a file will be requested
-                                      // about 1 request per minute
-   bool is_request;
-   int requesting_device;
-   int time = 0; // how many seconds in our simulation
-   int x, y; // the location ints
+   // epsilon for greedy
+   double epsilon = stof(argv[10]);
 
-   int num_requests = 0; // total number of file requests
-   int cache_hit = 0; // the number of times a request has had a cache hit
-   float radius = 30; // the distance that two devices are in contact
+   int num_thresholds = stoi(argv[11]);
 
-   vector<int> device_requests (n, 0);
+   int threshold_size = stoi(argv[12]);
 
-   while (getline(location_data, line)) {
+   double top_rate = stof(argv[13]);
 
-      // read in point
-      line_strm.clear();
-      line_strm.str(line);
-      line_strm >> x >> y;
+   double rate_dec = stof(argv[14]);
 
-      if (locations.size() < n) {
-         // hasn't been filled in yet
-         locations.push_back(make_pair(x, y));
-      }
-      else {
-         locations[node] = make_pair(x, y);
-      }
+   // how many files a device can cache
+   int cache_size = stoi(argv[15]);
 
-      if (node == (n - 1)) {
-         // we got to the end of a time step, update contact data
-         // time to do request simulation
-         time++;
+   bool evolve = (stoi(argv[16]) == 1);
 
-         // Is there a request?
-         
-         is_request = ((unif_0_1(generator)) < request_probability);
-         
-         if (is_request) {
+   cout << endl << "=== Cache Simulation ===" << endl;
 
-            num_requests++;
+   // get a contact graph from file
 
-            // which device?
-            requesting_device = unif_n(generator);
-            device_requests[requesting_device]++;
+   cout << "Computing contact graph from file " << locations_file << " over " << days
+        << " days" << endl;
 
-            // check if it's in contact with a cache device
-            for (int j = 0; j < greedy_devices.size(); j++) {
-               pair<int, int> cache_device_location = locations[greedy_devices[j]];
-               float distance = sqrt(pow(locations[greedy_devices[j]].first -
-                                         locations[requesting_device].first, 2.0) +
-                                     pow(locations[greedy_devices[j]].second -
-                                         locations[requesting_device].second, 2.0));
+   vector< vector<double> > contact_graph;
 
-               if (distance < radius) {
-                  // cache hit
-                  cache_hit ++;
-                  break;
-               }
-            }
-         }
+   contactGraphFromLocation(n, radius, locations_file, days, contact_graph);
 
-         node = -1; // will be incremented to 0
+   Graph graph (contact_graph);   
 
-      }
+   cout << "Beginning simulation with " << n << " devices, where the "
+        << num_thresholds*threshold_size
+        << " most popular of them are cached at any time. Starting on day "
+        << days << endl;
 
+   // start locations at days number of days
+   Locations loc (locations_file, n, days);
 
-      node++;
-   }
+   D2DInstance sim (n, m, zipf, dev_req, graph, cache_size, epsilon, radius,
+      num_thresholds, threshold_size, top_rate, rate_dec, loc, evolve);
 
-   cout << cache_hit/((float)num_requests) << endl;
+   int time = 0;
+
+   while (sim.nextTimeStep()) {
+
+      time++;
+   };
+
+   cout << "Simulation ran for " << time/86400 << " days." << endl;
+
+   cout << sim;
+
+   cout << "=== CACHE SIMULATION COMPLETE ===" << endl << endl;
+
 }
 
 
