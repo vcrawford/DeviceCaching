@@ -1,24 +1,24 @@
 # Generate random BA graphs, and find nodes to get desired cache hit rate
 time=$(date +%s)
-timeout="5"
-startn=20
+timeout="2h"
+startn=40
 endn=5000
-incn=10
-p=0.7
-d=10
-graph="bagraph_"$time".txt"
-results="results_"$time".xml"
+incn=5
+p=0.9
+perc=0.1
+graph="BAFinal/bagraph_"$time".txt"
+results="BAFinal/results_"$time".xml"
 timedout=0
 
 #Begin data file
-echo "<Experiment id=\"BA_"$p"\">" >> $results
+echo "<Experiment id=\"BA_"$p"_4\">" >> $results
 
-echo "<about>BAgraph,startn:$startn,endn:$endn,incn:$incn,d:$d,p:$p,timeout:$timeout</about>" >> $results
+echo "<about>BAgraph,startn:$startn,endn:$endn,incn:$incn,perc:$perc,p:$p,timeout:$timeout</about>" >> $results
 
 for ((i=$startn;i<=$endn;i=i + $incn));
 do
    #Random BA graph
-   RandomGraph/BarabasiAlbert $i $d $graph
+   RandomGraph/BarabasiAlbert $i $perc $graph
 
    #Get cache nodes
    if [ $timedout -eq 0 ]
@@ -31,6 +31,7 @@ do
    if [ $? -eq 124 ]
    then
       timedout=1
+      incn=10
    fi
 done
 

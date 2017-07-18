@@ -17,46 +17,32 @@ int main(int argc, char** argv) {
 
    int n = stoi(argv[1]); // number of nodes
 
-   int d = stoi(argv[2]); // desired average degree
+   double perc = stof(argv[2]); // desired average degree as a percent of n
+   int d = n*perc;
+   d = d - d%2;
 
    string output_file = argv[3];
 
-   if ((d%2 != 0) || (d > n-1)) throw invalid_argument("For BA graph, d must be even and less than n-1");
+   if ((d%2 != 0) || (d > n-1) || (d < 4)) throw invalid_argument("For BA graph, the average degree must be even, at least 4, and less than n-1");
 
    cout << "BA graph has " << n << " nodes" << endl;
+   cout << "The expected average degree should be " << d << endl;
 
-   // we first generate a lattice of size d where each node has two connections
+   // we first generate a complete graph of size d+1
    vector< vector<double> > graph;
 
-   random_graph_util::lattice(graph, d, 2);
+   random_graph_util::complete(graph, d + 1);
 
    // Want to keep track of each node's degree, since that determines its probability for new edges
 
-   vector<int> degrees; // degree of ith node
-   int sum_degrees = 0; // the sum of all degrees (twice the number of edges)
-
-   for (int i = 0; i < graph.size(); i++) {
-
-      int degree = 0;
-
-      for (int j = 0; j < graph[i].size(); j++) {
-
-         if (graph[i][j] != 0) {
-
-            degree++;
-            sum_degrees++;
-         }
-      }
-
-      degrees.push_back(degree);
-   }
+   vector<int> degrees (d+1, d); // degree of ith node
+   int sum_degrees = (d+1)*d; // the sum of all degrees (twice the number of edges)
 
    // Then we iteratively add a node and connect it with d/2 other nodes
 
    default_random_engine gen (time(NULL));
 
-   for (int j = d+1; j < n; j++) {
-      // adding the j+1th node
+   for (int j = d + 1; j < n; j++) {
 
       vector<double> new_row (graph.size() + 1, 0); // one bigger than rest because of self
       uniform_int_distribution<int> dist (0, sum_degrees);

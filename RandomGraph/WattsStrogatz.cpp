@@ -19,8 +19,12 @@ int main(int argc, char** argv) {
    // number of nodes
    int n = stoi(argv[1]);
 
-   // the mean degree
-   int k = stoi(argv[2]);
+   // the percent of nodes that should be the degree of each node
+   double p = stof(argv[2]);
+
+   // number of nodes computed from p
+   int k = p*n;
+   k -= k%2; // make it even
 
    // parameter beta: re-wiring probability
    double beta = stof(argv[3]);

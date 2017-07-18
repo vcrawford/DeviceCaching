@@ -115,6 +115,11 @@ namespace gamma_util {
 
       delta_small_gamma.clear();
 
+      if ((remove_cache_node > cached.size()) || (remove_cache_node < 0)) {
+
+         throw out_of_range("Attempting to compute delta gamma after removing node " + remove_cache_node);
+      }
+
       if (!cached[remove_cache_node]) {
          // nothing will change
          return;
@@ -148,9 +153,16 @@ namespace gamma_util {
          // Only impact neighbors that are not cached
 
          if (!cached[neighbors[j]]) {
+
             double edge_weight = graph.getEdgeWeight(remove_cache_node, neighbors[j]);
 
-            delta_small_gamma[neighbors[j]] = edge_weight*(small_gamma[neighbors[j]] - 1)/(1 - edge_weight);
+            delta_small_gamma[neighbors[j]] = (small_gamma[neighbors[j]] - edge_weight)/(1 - edge_weight) - small_gamma[neighbors[j]];
+
+            //delta_small_gamma[neighbors[j]] = -1*graph.getEdgeWeight(neighbors[j], remove_cache_node)*
+            //                              (1 - small_gamma[neighbors[j]]);
+            //delta_small_gamma[neighbors[j]] = small_gamma[neighbors[j]] -
+            //   (1 - small_gamma[neighbors[j]])*graph.getEdgeWeight(remove_cache_node, neighbors[j]);
+
          }
       }
    }

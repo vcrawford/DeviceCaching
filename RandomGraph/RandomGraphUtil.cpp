@@ -50,7 +50,9 @@ namespace random_graph_util {
    // construct lattice with k neighbors for each node
    void lattice( vector< vector<double> >& lattice, int n, int k) {
 
-      if ((k%2 != 0) || !(k < n)) throw invalid_argument("cannot be lattice with input k");
+      cout << "Generating a lattic of size " << n << " and each node having degree " << k << endl;
+
+      if ((k%2 != 0) || !(k < n)) throw invalid_argument("Invalid lattice");
 
       vector< vector<double> > graph (n, vector<double> (n, 0));
 
@@ -72,6 +74,23 @@ namespace random_graph_util {
       }
 
       lattice = graph;
+
+   }
+
+   // construct complete graph of size n
+   void complete( vector< vector<double> >& complete, int n) {
+
+      cout << "Generating a complete graph of size " << n << endl;
+
+      vector< vector<double> > graph (n, vector<double> (n, 1));
+
+      for (int i = 0; i < n; i++) {
+
+	graph[i][i] = 0;
+
+      }
+
+      complete = graph;
 
    }
 

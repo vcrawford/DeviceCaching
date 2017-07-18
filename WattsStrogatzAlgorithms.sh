@@ -1,26 +1,26 @@
 # Generate random WS graphs, and find nodes to get desired cache hit rate
 time=$(date +%s)
-timeout="5"
-startn=20
-endn=10000
+timeout="2h"
+startn=40
+endn=5000
 incn=5
-k=10
+perc=0.1
 beta=0.01
-p=0.7
-graph="wsgraph_"$time".txt"
-results="results_"$time".xml"
-n_vs_size="n_vs_size_"$time".png"
+p=0.9
+graph="WSFinal/wsgraph_"$time".txt"
+results="WSFinal/results_"$time".xml"
+n_vs_size="WSFinal/n_vs_size_"$time".png"
 timedout=0
 
 #Begin data file
-echo "<Experiment id=\"WS_"$beta"_"$p"\">" >> $results
+echo "<Experiment id=\"WS_"$p"_4\">" >> $results
 
 echo "<about>WSgraph,startn:$startn,endn:$endn,incn:$incn,k:$k,beta:$beta,p:$p,timeout:$timeout</about>" >> $results
 
 for ((i=$startn;i<=$endn;i=i + $incn));
 do
    #Random WS graph
-   RandomGraph/WattsStrogatz $i $k $beta $graph
+   RandomGraph/WattsStrogatz $i $perc $beta $graph
 
    #Get cache nodes
    if [ $timedout -eq 0 ]
@@ -33,6 +33,7 @@ do
    if [ $? -eq 124 ]
    then
       timedout=1
+      incn=10
    fi
 done
 

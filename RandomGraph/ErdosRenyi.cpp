@@ -20,20 +20,17 @@ int main(int argc, char** argv) {
    int n = stoi(argv[1]);
 
    // the desired average node degree
-   int deg = stoi(argv[2]);
+   double p = stof(argv[2]);
 
    // where to write the graph matrix
    string output_filename = argv[3];
 
-   cout << n << " nodes with expected average degree of " << deg << endl;
+   cout << n << " nodes with expected average degree of " << p*n << endl;
 
-   if (deg > (n - 1)) {
+   if ((p > 1) || (p < 0)) {
 
-      throw "Error in random erdos-renyi graph generation: The average degree must be at most n-1";
+      throw "Error in random erdos-renyi graph generation: p must be between 0 and 1";
    }
-
-   // get the probability from the average node degree
-   double p = double(deg)/(n - 1);
  
    // the probability of edges
    //double p = stof(argv[2]);

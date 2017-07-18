@@ -59,13 +59,13 @@ class Descendant {
    // Make a descendant like desc, but with node added (add=true) or removed (add=false)
    Descendant(const Descendant* desc, const Graph& graph, const int& node, bool add) {
 
-      map<int, double> delta_small_gamma;
-      double delta_big_gamma;
+      //map<int, double> delta_small_gamma;
+      //double delta_big_gamma;
 
       if (add) {
 
-         gamma_util::computeDeltaGammas(node, desc->nodes, desc->small_gamma, graph,
-                                        delta_small_gamma, delta_big_gamma);
+         //gamma_util::computeDeltaGammas(node, desc->nodes, desc->small_gamma, graph,
+         //                               delta_small_gamma, delta_big_gamma);
 
          this->nodes = desc->nodes;
          this->nodes[node] = true;
@@ -73,22 +73,28 @@ class Descendant {
       }
       else {
 
-         gamma_util::computeDeltaGammasRemove(node, desc->nodes, desc->small_gamma, graph,
-                                              delta_small_gamma, delta_big_gamma);
+         //gamma_util::computeDeltaGammasRemove(node, desc->nodes, desc->small_gamma, graph,
+         //                                     delta_small_gamma, delta_big_gamma);
+          
 
          this->nodes = desc->nodes;
          this->nodes[node] = false;
          this->size = desc->size - 1;
       }
 
-      this->small_gamma = desc->small_gamma;
+      gamma_util::computeSmallGamma(this->small_gamma, this->nodes, graph);
 
-      for (auto it = delta_small_gamma.begin(); it != delta_small_gamma.end(); it++) {
+      this->big_gamma = gamma_util::computeBigGamma(this->small_gamma, graph);
 
-         this->small_gamma[it->first] = this->small_gamma[it->first] + it->second;
-      }
 
-      this->big_gamma = desc->big_gamma + delta_big_gamma;
+      //this->small_gamma = desc->small_gamma;
+
+      //for (auto it = delta_small_gamma.begin(); it != delta_small_gamma.end(); it++) {
+
+      //   this->small_gamma[it->first] = this->small_gamma[it->first] + it->second;
+      //}
+
+      //this->big_gamma = desc->big_gamma + delta_big_gamma;
 
    }
 
@@ -158,7 +164,6 @@ class SolutionTreeNode {
          this->min_descendant = new Descendant(parent.min_descendant, this->graph, this->nodes[this->level - 1],
                                                true);
       }
-
    }
 
    ~SolutionTreeNode() {
@@ -173,12 +178,39 @@ class SolutionTreeNode {
    }
 
     // TESTING
-   void printMembers() {
+   void printMembers(Graph& graph) {
 
       cout << "Level " << this->level << endl;
       cout << "Max Descendant Big Gamma " << this->max_descendant->big_gamma << endl;
+      cout << "Max Descendant Size " << this->max_descendant->size << endl;
+      cout << "Max Descendant Size: ";
+
+      int max_desc_count = 0;
+      for (int i = 0; i < this->max_descendant->nodes.size(); i++) {
+
+         if (this->max_descendant->nodes[i]) max_desc_count++;
+      }
+
+      cout << max_desc_count << endl;
+
+      cout << "Gamma from scratch: " << gamma_util::computeBigGamma(this->max_descendant->nodes, graph) << endl;
+
       cout << "Min Descendant Size " << this->min_descendant->size << endl;
       cout << "Min Descendant Big Gamma " << this->min_descendant->big_gamma << endl;
+      cout << "Min Descendant Count: ";
+
+      int min_desc_count = 0;
+      for (int i = 0; i < this->min_descendant->nodes.size(); i++) {
+
+         if (this->min_descendant->nodes[i]) min_desc_count;
+      }
+
+      cout << min_desc_count << endl;
+
+      cout << "Gamma from scratch: " << gamma_util::computeBigGamma(this->min_descendant->nodes, graph) << endl;
+
+      cout << endl;
+      cout << flush;
 
    }
   
@@ -190,6 +222,21 @@ class SolutionTreeNode {
 // Note that that implies the parent has children (don't need to check for that)
 void searchChildrenSubTrees(const double& p, const int& n, SolutionTreeNode& parent,
                             vector< vector<bool> >& leafs, int& upper_bound) {
+
+   if (parent.level == n) {
+      // we are at a leaf
+
+      if (parent.min_descendant->big_gamma >= p) {
+
+         leafs.push_back(parent.min_descendant->nodes);
+      }
+      else if (parent.max_descendant->size < upper_bound) {
+
+         leafs.push_back(parent.max_descendant->nodes);
+      }
+
+      return;
+   }
 
    // Look at the left child
 
