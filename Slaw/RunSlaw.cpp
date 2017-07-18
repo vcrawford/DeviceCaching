@@ -28,12 +28,12 @@ int main(int argc, char* argv[]) {
 
    cout << "Generating fractal points ..." << endl;
 
-   // Get fractal points for 1000 by 1000 m area
+   // Get fractal points for 500 by 500 m area
    vector< pair<int, int> > points;
-   cout << getFractalPoints(1000, 1000, 2000, 5, points) << " fractal points have been generated "<< endl;
+   cout << getFractalPoints(500, 500, 2000, 4, points) << " fractal points have been generated "<< endl;
 
    // Cluster the fractal points
-   int fractal_radius = 20;
+   int fractal_radius = 10;
    cout << "Clustering fractal points using radius " << fractal_radius << " ..." << endl;
    vector< vector< pair<int, int> > > clusters;
    computeClusters(fractal_radius, points, clusters);
