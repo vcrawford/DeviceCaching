@@ -16,7 +16,9 @@ class D2DInstance {
 
    BaseStation bs;
 
-   CacheController cache_cont;
+   // cache controller for our greedy algorithm
+   // pointer since we don't know which child class
+   unique_ptr<CacheController> cache_cont;
 
    // generates locations
    Locations& locations;
@@ -53,10 +55,15 @@ class D2DInstance {
       d2d_cont (devices, radius, current_locations),
       file_rank (m, evolve, evolve_portion, seed),
       req_cont (n, m, zipf, file_rank, 0, seed), bs (devices),
-      cache_cont (g, n, cache_size, epsilon, thresholds, cache_hit_rates, file_rank, alg),
       time (0), locations (locations) {
 
       clog << "D2D instance created using " << alg << " caching.";
+
+      if (alg == "greedy") {
+
+         this->cache_cont = unique_ptr<CacheControllerGreedy> (new CacheControllerGreedy
+            (g, n, cache_size, epsilon, thresholds, cache_hit_rates, file_rank, alg));
+      }
 
       this->makeDevices(n, cache_size);
 
@@ -85,7 +92,7 @@ class D2DInstance {
 
       vector<int> device_ids;
 
-      while (this->cache_cont.takeNextToCache(file, device_ids)) {
+      while (this->cache_cont->takeNextToCache(file, device_ids)) {
 
          this->bs.newCache(file, device_ids);
       }
@@ -127,7 +134,7 @@ class D2DInstance {
 
          // there has been a rank change
 
-         if (this->cache_cont.nextTimeStep()) {
+         if (this->cache_cont->nextTimeStep()) {
 
             // there is something new to cache
 
@@ -289,11 +296,17 @@ class D2DInstance {
          cache_hits += this->d2d_cont.success.at(file);
       }
 
-      os << " <" << this->cache_cont.getAlgorithm() << ">" << endl;
-      os << "  <p>" << this->cache_cont.getTheoreticalCacheHitRate(file) << "</p>" << endl;
+      os << " <" << this->cache_cont->getAlgorithm() << ">" << endl;
+
+      if (dynamic_cast<CacheControllerGreedy*> (this->cache_cont.get()) != NULL) {
+
+         os << "  <p>" << this->cache_cont->getTheoreticalCacheHitRate(file)
+            << "</p>" << endl;         
+      }
+
       os << "  <hitrate>" << cache_hits/this->num_requests.at(file) << "</hitrate>" << endl;
       os << "  <n>" << this->devices.size() << "</n>" << endl;
-      os << " </" << this->cache_cont.getAlgorithm() << ">" << endl;
+      os << " </" << this->cache_cont->getAlgorithm() << ">" << endl;
 
    }
 

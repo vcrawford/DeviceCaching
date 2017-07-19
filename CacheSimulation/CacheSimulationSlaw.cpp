@@ -13,7 +13,7 @@
 #include <list>
 #include <functional>
 #include <cassert>
-#include <algorithm>
+#include <memory>
 #include "../Slaw/Locations.cpp"
 #include "../Slaw/ContactGraphUtil.cpp"
 #include "../Algorithms/Graph.cpp"
@@ -30,6 +30,7 @@
 #include "RequestController.cpp"
 #include "BaseStation.cpp"
 #include "CacheController.cpp"
+#include "CacheControllerGreedy.cpp"
 #include "D2DInstance.cpp"
 
 using namespace std;
@@ -116,9 +117,8 @@ int main(int argc, char** argv) {
 
    int time = 0;
 
-   while (time < 259200) {
+   while (sim.nextTimeStep()) {
 
-      sim.nextTimeStep();
       time++;
    };
 
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
    // write results to file
 
    ofstream output;
-   output.open(results_file);
+   output.open(results_file, ios_base::app);
 
    if (report_files > 0) {
 
