@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
    initializeVisualization(walker_count);
 
-   location_file = open("locations.txt", "r")
+   location_file = open(sys.argv[2], "r")
 
    walker = 0 # which walker's location we're reading
    second = 0
