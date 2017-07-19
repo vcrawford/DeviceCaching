@@ -110,18 +110,20 @@ public:
 
    }
 
-   // can a device with id dev overhear an ongoing transmission
+   // can a device with id dev overhear more than 4 ongoing transmissions?
    bool canHear(const int& dev) {
+
+      int count = 0;
 
       for (auto it = this->in_transmission.begin(); it != this->in_transmission.end(); it++) {
 
          if (this->withinRadius(dev, it->device_send.id)) {
 
-            return true;
+            count++;
          }
       }
 
-      return false;
+      return (count > 4);
 
    }
 
@@ -155,7 +157,7 @@ public:
          return false;
       }
 
-      // is device_2 already overhearing some transmission?
+      // is device_2 overhearing more than 4 transmissions?
 
       if (this->canHear(device_2)) {
 

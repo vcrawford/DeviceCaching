@@ -6,7 +6,7 @@ using namespace std;
 class BaseStation {
 
    // the number of resource blocks this BS has to distribute
-   static constexpr double NUM_RBS = 300;
+   static constexpr double NUM_RBS = 250;
 
    // all devices in the system, in order of id
    vector<Device>& devices;

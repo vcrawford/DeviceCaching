@@ -45,14 +45,18 @@ class D2DInstance {
    // thresholds is the min rank number for each threshold
    // cache_hit_rates is the rates at which files in each threshold should be cached
    // evolve is whether we want file popularity to evolve
-   D2DInstance(const int& n, const int& m, const double& zipf, const double& dev_req,
+   D2DInstance(const int& n, const int& m, const double& zipf,
       Graph& g, const int& cache_size, const double& epsilon, const int& radius, 
-      const int& num_thresholds, const int& threshold_size, const double& top_rate,
-      const double& rate_dec, Locations& locations, const bool& evolve):
-      d2d_cont (devices, radius, current_locations), file_rank (m, evolve),
-      req_cont (n, m, zipf, dev_req, file_rank, 0), bs (devices),
-      cache_cont (g, n, cache_size, epsilon, num_thresholds, threshold_size,
-      top_rate, rate_dec, file_rank), time (0), locations (locations) {
+      vector<int>& thresholds, vector<double>& cache_hit_rates,
+      Locations& locations, const bool& evolve,
+      const double& evolve_portion, const string& alg, const int& seed):
+      d2d_cont (devices, radius, current_locations),
+      file_rank (m, evolve, evolve_portion, seed),
+      req_cont (n, m, zipf, file_rank, 0, seed), bs (devices),
+      cache_cont (g, n, cache_size, epsilon, thresholds, cache_hit_rates, file_rank, alg),
+      time (0), locations (locations) {
+
+      clog << "D2D instance created using " << alg << " caching.";
 
       this->makeDevices(n, cache_size);
 
@@ -88,17 +92,48 @@ class D2DInstance {
 
    }
 
+   void addDisplayTime(ostream& os) {
+
+      int days = this->time/86400;
+
+      int leftover = this->time%86400;
+
+      int hours = leftover/(60*60);
+
+      leftover = leftover%(60*60);
+
+      int minutes = leftover/60;
+
+      int seconds = leftover%60;
+
+      os << "Day: " << days << ", " << hours << ":" << minutes << ":" << seconds;
+   }
+
    // take the entire simulation to the next time step
    // if there doesn't exist any more contact data, returns false
    bool nextTimeStep() {
 
       this->time++;
 
-      clog << endl << "***Beginning next time step (t = " << this->time << ")..." << endl;
+      clog << endl << "***Beginning next time step (t = ";
+
+      this->addDisplayTime(clog);
+
+      clog << ")..." << endl;
 
       // update file popularity (if we choose to do that in this simulation)
 
-      this->file_rank.nextTimeStep();
+      if (this->file_rank.nextTimeStep()) {
+
+         // there has been a rank change
+
+         if (this->cache_cont.nextTimeStep()) {
+
+            // there is something new to cache
+
+            this->cachePopular();
+         }
+      }
 
       // get new locations
 
@@ -231,63 +266,37 @@ class D2DInstance {
       return used_space/(this->devices[0].cache_size*this->devices.size());
    }
 
-   friend ostream& operator<<(ostream&, D2DInstance&);
+   // prints theoretical cache hit rate, actual cache hit rate, etc. for file
+   // at certain rank
+   // prints inside what algorithm was used to get it
+   void printFileResults(ostream& os, const int& rank) {
 
-};
+      int file = this->file_rank.getPopularFile(rank);
 
-ostream& operator<<(ostream& os, D2DInstance& x) {
-
-   //os << endl << x.file_rank;
-
-   //os << x.cache_cont;
-
-   //for (int i = 0; i < x.devices.size(); i++) {
-
-   //   os << x.devices[i];
-   //}
-
-   //os << endl;
-
-   os << "<Experimental cache hit rates>" << endl;
-
-   double cache_hits_overall = 0;
-   double num_requests_overall = 0;
-
-   // iterate through each file that we got requests for
-   for (auto it = x.num_requests.begin(); it != x.num_requests.end(); it++) {
+      assert (this->num_requests.find(file) != this->num_requests.end());
 
       double cache_hits = 0;
 
-      if (x.own_cache.find(it->first) != x.own_cache.end()) {
+      if (this->own_cache.find(file) != this->own_cache.end()) {
 
          // add in cache hits from a device's own cache
-         cache_hits += x.own_cache.at(it->first);
+         cache_hits += this->own_cache.at(file);
       }
 
-      if (x.d2d_cont.success.find(it->first) != x.d2d_cont.success.end()) {
+      if (this->d2d_cont.success.find(file) != this->d2d_cont.success.end()) {
 
          // add in d2d cache hits
-         cache_hits += x.d2d_cont.success.at(it->first);
+         cache_hits += this->d2d_cont.success.at(file);
       }
 
-      if (cache_hits > 0) {
-
-         os << "File " << it->first << " ("
-            << x.cache_cont.getTheoreticalCacheHitRate(it->first) << "): "
-            << cache_hits/x.num_requests[it->first] << " cache hit rate" << endl;
-      }
-      
-      cache_hits_overall += cache_hits;
-      num_requests_overall += x.num_requests[it->first];
+      os << " <" << this->cache_cont.getAlgorithm() << ">" << endl;
+      os << "  <p>" << this->cache_cont.getTheoreticalCacheHitRate(file) << "</p>" << endl;
+      os << "  <hitrate>" << cache_hits/this->num_requests.at(file) << "</hitrate>" << endl;
+      os << "  <n>" << this->devices.size() << "</n>" << endl;
+      os << " </" << this->cache_cont.getAlgorithm() << ">" << endl;
 
    }
 
-   os << "Percent of cache space used: " << x.percentCacheSpaceUsed() << endl;
 
-   if (num_requests_overall > 0 ) {
+};
 
-      os << "Overall cache hit rate: " << cache_hits_overall/num_requests_overall << endl;     
-   }
-
-   return os;
-}

@@ -13,6 +13,7 @@
 #include <list>
 #include <functional>
 #include <cassert>
+#include <algorithm>
 #include "../Slaw/Locations.cpp"
 #include "../Slaw/ContactGraphUtil.cpp"
 #include "../Algorithms/Graph.cpp"
@@ -41,78 +42,102 @@ int main(int argc, char** argv) {
    // number of potential cache files in this simulation
    int m = stoi(argv[2]);
 
-   // number of files that should be cached at any time (assumed to be the most popular k)
-   int k = stoi(argv[3]);
-
-   // probability that there is a request for a file during any second per device
-   // at the busiest time of day
-   double dev_req = stof(argv[4]);
-
-   // the file that has the locations for all of our devices
-   string locations_file = argv[5];
-
-   // the file to output results to
-   string results_file = argv[6];
-
-   // the radius that is considered in contact
-   int radius = stoi(argv[7]);
+   // how many files a device can cache
+   int cache_size = stoi(argv[3]);
 
    // parameter for our Zipf distribution
-   double zipf = stof(argv[8]);
+   double zipf = stof(argv[4]);
 
-   // how many days are used for the contact graph computation
-   int days = stoi(argv[9]);
+   // whether we want the file distribution to evolve
+   bool evolve = (stoi(argv[5]) == 1);
+
+   // the radius that is considered in contact
+   int radius = stoi(argv[6]);
 
    // epsilon for greedy
-   double epsilon = stof(argv[10]);
+   double epsilon = stof(argv[7]);
 
-   int num_thresholds = stoi(argv[11]);
+   // what portion of the bottom 90% of files should be moving to the top 10%
+   // of files per day
+   double evolve_portion = stof(argv[8]);
 
-   int threshold_size = stoi(argv[12]);
+   // day that we start on (to not overlap with contact graph days)
+   int start_day = stoi(argv[9]);
 
-   double top_rate = stof(argv[13]);
+   // the file that has the locations for all of our devices
+   string locations_file = argv[10];
 
-   double rate_dec = stof(argv[14]);
+   string contact_graph_file = argv[11];
 
-   // how many files a device can cache
-   int cache_size = stoi(argv[15]);
+   string results_file = argv[12];
 
-   bool evolve = (stoi(argv[16]) == 1);
+   string alg = argv[13];
+
+   int seed = stoi(argv[14]);
+
+   int report_files = stoi(argv[15]);
+
+   // read in thresholds and their corresponding rates
+
+   int num_thresholds = stoi(argv[16]);
+
+   assert (argc >= 17 + 2*num_thresholds - 1);
+
+   vector<int> thresholds;
+
+   for (int i = 17; i < 17 + num_thresholds; i++) {
+
+      thresholds.push_back(stoi(argv[i]));
+   }
+
+   vector<double> cache_hit_rates;
+
+   for (int i = 17 + num_thresholds; i < 17 + 2*num_thresholds; i++) {
+
+      cache_hit_rates.push_back(stof(argv[i]));
+   }
 
    cout << endl << "=== Cache Simulation ===" << endl;
 
-   // get a contact graph from file
+   // read in contact graph from file
 
-   cout << "Computing contact graph from file " << locations_file << " over " << days
-        << " days" << endl;
+   cout << "Reading contact graph from file " << contact_graph_file << "." << endl;
 
-   vector< vector<double> > contact_graph;
+   Graph graph (contact_graph_file);   
 
-   contactGraphFromLocation(n, radius, locations_file, days, contact_graph);
-
-   Graph graph (contact_graph);   
-
-   cout << "Beginning simulation with " << n << " devices, where the "
-        << num_thresholds*threshold_size
-        << " most popular of them are cached at any time. Starting on day "
-        << days << endl;
+   cout << "Beginning simulation with " << n << " devices. Starting on day "
+        << start_day << endl;
 
    // start locations at days number of days
-   Locations loc (locations_file, n, days);
+   Locations loc (locations_file, n, start_day);
 
-   D2DInstance sim (n, m, zipf, dev_req, graph, cache_size, epsilon, radius,
-      num_thresholds, threshold_size, top_rate, rate_dec, loc, evolve);
+   D2DInstance sim (n, m, zipf, graph, cache_size, epsilon, radius,
+      thresholds, cache_hit_rates, loc, evolve, evolve_portion, alg, seed);
 
    int time = 0;
 
-   while (sim.nextTimeStep()) {
+   while (time < 259200) {
 
+      sim.nextTimeStep();
       time++;
    };
 
    cout << "Simulation ran for " << time/86400 << " days." << endl;
 
-   cout << sim;
+   // write results to file
+
+   ofstream output;
+   output.open(results_file);
+
+   if (report_files > 0) {
+
+      for (int i = 0; i < report_files; i++) {
+
+          sim.printFileResults(output, i);     
+      }
+   }
+
+   cout << "Results written to file " << results_file << endl;
 
    cout << "=== CACHE SIMULATION COMPLETE ===" << endl << endl;
 

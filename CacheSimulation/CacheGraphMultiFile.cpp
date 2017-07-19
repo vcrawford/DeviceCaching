@@ -27,20 +27,35 @@ class CacheGraphMultiFile {
    // epsilon is for the greedy algorithm
    // assumes we start out with all caches empty
    CacheGraphMultiFile(Graph& g, const int& n, const int& c, const double& epsilon):
-                       graph (g), can_cache (n, true), available_cache (n, c), epsilon (epsilon) { }
+                       graph (g), can_cache (n, true), available_cache (n, c), epsilon (epsilon) {
+
+      assert (epsilon > 0);
+   }
 
    // Determine what nodes to cache a file in in order to get a cache hit rate of p
    // for that file, and then cache those nodes.
    // If we cannot get that rate, just don't cache.
-   // Returns whether this was successful or not
+   // Returns false if either it is not possible to cache at this rate, or there is no new nodes
+   // to cache
    bool cacheFile (const int& file_id, const double& p, vector<int>& nodes) {
+
+      assert((p < 1) && (this->epsilon < p));
 
       if (this->cache_graphs.find(file_id) == this->cache_graphs.end()) {
 
          this->cache_graphs.insert( make_pair(file_id, CacheGraph (this->graph, this->can_cache)) );
-      } 
+      }
+
+      if (this->cache_graphs.at(file_id).big_gamma >= p - this->epsilon) {
+
+         // already cached sufficiently
+         return false;
+      }
 
       if (greedy(this->cache_graphs.at(file_id), nodes, p, this->epsilon) >= p - this->epsilon) {
+
+         clog << "File " << file_id << " should be cached on " << nodes.size()
+            << " devices in order to have a cache hit rate of " << p << endl;
 
          this->cache_graphs.at(file_id).addCacheNodes(nodes);
 
@@ -50,6 +65,8 @@ class CacheGraphMultiFile {
 
             if (this->available_cache[nodes[i]] == 0) {
 
+               clog << "Device " << nodes[i] << " no longer has available cache space." << endl;
+
                this->can_cache[nodes[i]] = false;
             }
          }
@@ -57,6 +74,7 @@ class CacheGraphMultiFile {
          return true;
       }
 
+      // were not able to cache this file at the appropriate rate
       return false;
 
    }

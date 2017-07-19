@@ -5,12 +5,18 @@ using namespace std;
 // Controls requests for files from devices
 class RequestController {
 
+   // the probability per device that a request will come in
+   // at the busiest part of the day
+   static constexpr double max_prob_device = 0.001;
+
    default_random_engine gen;
 
    uniform_real_distribution<double> rand_0_1;
 
+   // controls what file is requested
    FileRequest f_req;
 
+   // controls what device requests the file
    DeviceRequest d_req;
 
    // the probability a request will come in (roughly)
@@ -26,12 +32,12 @@ class RequestController {
    public:
 
    // assumed to be created as 11:59 pm (will be 12am when first request is possible)
-   RequestController(const int& n, const int& m, const double& zipf, const double& dev_req,
-      FileRanking& ranking, const double& start_time):
-      f_req(m, zipf, ranking), d_req (n), gen (time(NULL)), rand_0_1 (0, 1) {
+   RequestController(const int& n, const int& m, const double& zipf,
+      FileRanking& ranking, const double& start_time, const int& seed):
+      f_req(m, zipf, ranking, seed), d_req (n, seed), gen (seed), rand_0_1 (0, 1) {
 
          // the maximum request probability we will have
-         double max_prob = n*dev_req;
+         double max_prob = n*this->max_prob_device;
 
          // must reach max_prob at 1pm by increasing from 0 at 7am
          this->inc_rate = (max_prob)/(6*60*60);

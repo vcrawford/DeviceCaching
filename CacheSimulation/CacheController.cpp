@@ -20,11 +20,14 @@ class CacheController {
    Graph graph;
 
    // the theoretical cache graph construct
-   CacheGraphMultiFile cache_graph;
+   CacheGraphMultiFile cache_graphs;
 
    // a map of file id to device id that should be cached
    // and has not already been
    map<int, vector<int> > to_cache;
+
+   // what algorithm we use to decide what and when to cache
+   string alg;
 
 public:
 
@@ -33,40 +36,36 @@ public:
    // n is the number of nodes (number of devices)
    // c is the number of files a single node can cache
    CacheController(Graph& g, const int& n, const int& c, const double& epsilon, 
-                   const int& num_thresholds, const int& threshold_size,
-                   const double& top_rate, const double& rate_dec,
-                   FileRanking& file_ranking): file_ranking(file_ranking),
-                   graph (g), cache_graph (g, n, c, epsilon) {
+                   vector<int>& thresholds, vector<double>& cache_hit_rates,
+                   FileRanking& file_ranking, const string& alg): file_ranking(file_ranking),
+                   graph (g), cache_graphs (g, n, c, epsilon), thresholds (thresholds),
+                   cache_hit_rates (cache_hit_rates), alg (alg) {
 
-      this->computeThresholds(num_thresholds, threshold_size, top_rate, rate_dec);
+      clog << "Cache controller created with thresholds ";
 
-      this->initialCache();
+      for (int i = 0; i < this->thresholds.size(); i++) {
+
+         clog << this->thresholds[i] << ", ";
+      }
+
+      clog << " and cache hit rates ";
+
+      for (int i = 0; i < this->cache_hit_rates.size(); i++) {
+
+         clog << this->cache_hit_rates[i] << ", ";
+      }
+
+      clog << endl;
+
+      assert( this->cache_hit_rates.size() == this->thresholds.size());
+
+      this->cacheFilesInThresholds();
 
    }
 
-   bool computeThresholds(const int& num_thresholds, const int& threshold_size,
-      const double& top_rate, const double& rate_dec) {
+   string getAlgorithm() {
 
-      assert(top_rate - (rate_dec*(num_thresholds - 1)) > 0);
-
-      int threshold_lower_bound = threshold_size - 1;
-
-      double cache_hit_rate = top_rate;
-
-      clog << "Cache controller is computing thresholds " << endl;
-
-      for (int i = 0; i < num_thresholds; i++) {
-
-         this->thresholds.push_back(threshold_lower_bound);
-         this->cache_hit_rates.push_back(cache_hit_rate);
-
-         clog << "Threshold for files above popularity rank " << threshold_lower_bound
-            << " with cache hit rate " << cache_hit_rate << endl;
-
-         threshold_lower_bound += threshold_size;
-         cache_hit_rate -= rate_dec;
-      }
-
+      return this->alg;
    }
 
    // get the cache hit rate that a file should be cached at
@@ -87,10 +86,16 @@ public:
 
    }
 
-   // the initial setting of the file popularities and what devices cache them
-   bool initialCache() {
+   // adds any new caching that must be done
+   // if something has been added, returns true
+   bool nextTimeStep() {
 
-      clog << "Cache controller computing initial cache" << endl;
+      return this->cacheFilesInThresholds();
+   }
+
+   // adds to this->to_cache if needed
+   // returns whether there is anything new to cache
+   bool cacheFilesInThresholds() {
 
       // what threshold we are at
       int t = 0;
@@ -119,22 +124,14 @@ public:
 
          vector<int> file_cache_nodes;
 
-         if (this->cache_graph.cacheFile(this->file_ranking.getPopularFile(i), cache_hit_rates[t],
+         if (this->cache_graphs.cacheFile(this->file_ranking.getPopularFile(i), cache_hit_rates[t],
             file_cache_nodes)) {
 
-            clog << "Should cache file " << this->file_ranking.getPopularFile(i) << " at rate "
-               << cache_hit_rates[t] << ". corresponding to nodes ";
-
-            for (int i = 0; i < file_cache_nodes.size(); i++){
-
-               clog << file_cache_nodes[i] << ", ";
-            }
-
-            clog << endl;
-
-            this->to_cache.insert( make_pair(this->file_ranking.getPopularFile(i), file_cache_nodes) );
+            this->to_cache[this->file_ranking.getPopularFile(i)] = file_cache_nodes;
          }
       }
+
+      return (this->to_cache.size() > 0);
 
    }
 
@@ -182,25 +179,6 @@ ostream& operator<<(ostream& os, const CacheController& x) {
 
       os << x.cache_hit_rates[i] << " ";
    }
-
-   /**os << " To cache: " << endl;
-
-   for (auto it = x.to_cache.begin(); it != x.to_cache.end(); it++) {
-
-      os << "  File " << it->first << ": ";
-
-      for (int i = 0; i < it->second.size(); i++) {
-
-         os << it->second[i] << ", ";
-      }
-
-      os << endl;
-   }
-
-   os << endl;
-
-   os << x.cache_graph;
-   */
 
    os << endl;
 

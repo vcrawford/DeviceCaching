@@ -1,22 +1,27 @@
 # get the theoretical cache hit rate vs. the experimental cache hit rate
 
-n=130
+n=200
 m=1000
-k=1
-dev_req=0.001
-locations_file=SlawLocation/1/location_1499459583.txt
-results_file=output.xml
+locations_file=Location/locations_200.txt
+results_file=CacheSimulation/output.xml
+alg="greedy"
+seed=$(date +%s)
 radius=20
 zipf=0.56
-contact_days=3
+start_day=3
 epsilon=0.001
-num_thresholds=14
-threshold_size=10
-top_rate=0.8
-rate_dec=0.05
 cache_size=10
-evolve=1
+evolve=0
+contact_graph_file=Location/graph_200.txt
+evolve_portion=0.03
+report_files=3
+num_thresholds=3
+thresholds="0 1 2"
+cache_hit_rates="0.9 0.6 0.3"
+#num_thresholds=4
+#thresholds="9 19 49 99"
+#cache_hit_rates="0.95 0.9 0.8 0.6"
 
-CacheSimulation/CacheSimulationSlaw $n $m $k $dev_req $locations_file $results_file $radius $zipf $contact_days $epsilon $num_thresholds $threshold_size $top_rate $rate_dec $cache_size $evolve
+CacheSimulation/CacheSimulationSlaw $n $m $k $cache_size $zipf $evolve $radius $epsilon $evolve_portion $start_day $locations_file $contact_graph_file $results_file $alg $seed $report_files $num_thresholds $thresholds $cache_hit_rates
 
 

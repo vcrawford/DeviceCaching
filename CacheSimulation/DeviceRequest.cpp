@@ -14,7 +14,8 @@ class DeviceRequest {
    public:
 
    // n is the number of devices
-   DeviceRequest(const int& n): gen (time(NULL)), rand_0_n (0, n - 1) { }
+   DeviceRequest(const int& n, const int& seed):
+      gen (seed), rand_0_n (0, n - 1) { }
 
    // get a request from a random device
    // returns the device's id

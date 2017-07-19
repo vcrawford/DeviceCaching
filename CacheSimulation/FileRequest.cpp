@@ -25,8 +25,8 @@ class FileRequest {
    public:
 
    // m is the number of files
-   FileRequest(const int& m, const double& zipf, FileRanking& fr):
-               gen (time(NULL)), rand_0_1 (0, 1), file_ranking (fr), zipf (zipf) {
+   FileRequest(const int& m, const double& zipf, FileRanking& fr, const int& seed):
+               gen (seed), rand_0_1 (0, 1), file_ranking (fr), zipf (zipf) {
 
       // calculate the denominator
 
