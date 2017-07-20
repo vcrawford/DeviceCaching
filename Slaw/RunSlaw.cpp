@@ -30,10 +30,10 @@ int main(int argc, char* argv[]) {
 
    // Get fractal points for 500 by 500 m area
    vector< pair<int, int> > points;
-   cout << getFractalPoints(500, 500, 2000, 4, points) << " fractal points have been generated "<< endl;
+   cout << getFractalPoints(1000, 1000, 2000, 5, points) << " fractal points have been generated " << endl;
 
    // Cluster the fractal points
-   int fractal_radius = 10;
+   int fractal_radius = 20;
    cout << "Clustering fractal points using radius " << fractal_radius << " ..." << endl;
    vector< vector< pair<int, int> > > clusters;
    computeClusters(fractal_radius, points, clusters);
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
 
 
    ofstream walker_locations;
-   walker_locations.open(location_output_file, fstream::out | fstream::app);
+   walker_locations.open(location_output_file);
 
    for (int day = 0; day < days; day++) {
 

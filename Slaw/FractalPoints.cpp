@@ -32,8 +32,8 @@ int addFractalPoints(const int& x_min, const int& x_max, const int& y_min, const
 
       // Get normal distributions from which the points will be drawn
       float variance = min(x_max - x_min, y_max - y_min);
-      normal_distribution<float> distribution_x (mid_x, 0.5*(x_max - x_min));
-      normal_distribution<float> distribution_y (mid_y, 0.5*(y_max - y_min));
+      normal_distribution<float> distribution_x (mid_x, 0.3*(x_max - x_min));
+      normal_distribution<float> distribution_y (mid_y, 0.3*(y_max - y_min));
 
       // Draw each point randomly
 

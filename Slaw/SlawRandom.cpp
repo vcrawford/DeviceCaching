@@ -39,7 +39,7 @@ class SlawRandom {
 
    }
 
-   // Get number of seconds to wait, sampled from a pareto distribution with min 30 and max
+   // Get number of seconds to wait, sampled from a pareto distribution with min 30 and max 5 hours
    int getWait() {
 
       return (int) min(30*exp( this->exponential (this->generator) ), (float) 5000);
@@ -68,7 +68,7 @@ class SlawRandom {
 
    }
 
-   // Pick random points from a certain cluster, altogether 10% of cluster size
+   // Pick random points from a certain cluster, altogether 5% of cluster size
    void getRandomPointsInCluster(const int& cluster, vector< pair<int, int> >& picked) {
 
       // add num_waypoints to new_waypoints

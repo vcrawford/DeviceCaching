@@ -41,7 +41,7 @@ def initializeVisualization(walker_count):
   opengl.colors = colors
   opengl.precision = 10.0
   opengl.radius = 5.0
-  opengl.point_range = 500
+  opengl.point_range = 1000
   opengl.startVisualization("Slaw Device Movement")
 
 # Updates the opengl image to have the current locations
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
    print "Plotting fractal points ..."
 
-   fractalPointsImage("fractal_points.txt", 500)
+   fractalPointsImage("fractal_points.txt", 1000)
 
    print "Starting OpenGL simulation ...";
 

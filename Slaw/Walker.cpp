@@ -116,12 +116,12 @@ class Walker {
       this->route_step = 1;
    }
 
-   // Pick 4 random clusters that this walker will visit
+   // Pick 3 random clusters that this walker will visit each day
    void pickClusters() {
 
       this->clusters.clear();
 
-      while (this->clusters.size() < 4) {
+      while (this->clusters.size() < 3) {
 
          int random_cluster;
          bool is_new;
@@ -155,10 +155,10 @@ class Walker {
 
    }
 
-   // pick the regular waypoints, i.e. 10% of each cluster
+   // pick the regular waypoints
    void pickWaypoints() {
 
-      // for each cluster, add 10% of waypoints to this->waypoints
+      // for each cluster
       for (int i = 0; i < this->clusters.size(); i++) {
 
          vector< pair<int, int> > new_waypoints;
