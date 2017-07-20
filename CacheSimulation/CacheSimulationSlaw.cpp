@@ -31,6 +31,7 @@
 #include "BaseStation.cpp"
 #include "CacheController.cpp"
 #include "CacheControllerGreedy.cpp"
+#include "CacheControllerRandom1.cpp"
 #include "D2DInstance.cpp"
 
 using namespace std;
@@ -72,72 +73,98 @@ int main(int argc, char** argv) {
 
    string results_file = argv[12];
 
-   string alg = argv[13];
+   int seed = stoi(argv[13]);
 
-   int seed = stoi(argv[14]);
-
-   int report_files = stoi(argv[15]);
+   int report_files = stoi(argv[14]);
 
    // read in thresholds and their corresponding rates
 
-   int num_thresholds = stoi(argv[16]);
+   int num_thresholds = stoi(argv[15]);
 
-   assert (argc >= 17 + 2*num_thresholds - 1);
+   assert (argc >= 16 + 2*num_thresholds - 1);
 
    vector<int> thresholds;
 
-   for (int i = 17; i < 17 + num_thresholds; i++) {
+   for (int i = 16; i < 16 + num_thresholds; i++) {
 
       thresholds.push_back(stoi(argv[i]));
    }
 
    vector<double> cache_hit_rates;
 
-   for (int i = 17 + num_thresholds; i < 17 + 2*num_thresholds; i++) {
+   for (int i = 16 + num_thresholds; i < 16 + 2*num_thresholds; i++) {
 
       cache_hit_rates.push_back(stof(argv[i]));
    }
 
    cout << endl << "=== Cache Simulation ===" << endl;
 
-   // read in contact graph from file
-
-   cout << "Reading contact graph from file " << contact_graph_file << "." << endl;
-
-   Graph graph (contact_graph_file);   
-
-   cout << "Beginning simulation with " << n << " devices. Starting on day "
-        << start_day << endl;
-
-   // start locations at days number of days
-   Locations loc (locations_file, n, start_day);
-
-   D2DInstance sim (n, m, zipf, graph, cache_size, epsilon, radius,
-      thresholds, cache_hit_rates, loc, evolve, evolve_portion, alg, seed);
-
-   int time = 0;
-
-   while (sim.nextTimeStep()) {
-
-      time++;
-   };
-
-   cout << "Simulation ran for " << time/86400 << " days." << endl;
-
-   // write results to file
-
-   ofstream output;
-   output.open(results_file, ios_base::app);
-
    if (report_files > 0) {
 
-      for (int i = 0; i < report_files; i++) {
+      cout << "Running single file caching experiments ..." << endl;
 
-          sim.printFileResults(output, i);     
+      // just reporting on the top files
+
+      // always do greedy first, so we can get the numbers for how many to place
+      // on the remaining algorithms
+      string algs [2] = {"greedy", "random1"};
+
+      // to be used in non-greedy algorithms to decide how many of each file should
+      // be placed
+      vector<int> file_cache_count;
+
+      for (int i = 0; i < 2; i++) {
+
+         clog << endl << "Beginning simulation for algorithm " << algs[i] << endl;
+ 
+         // read in contact graph from file
+
+         clog << "Reading contact graph from file " << contact_graph_file << "." << endl;
+
+         Graph graph (contact_graph_file);   
+
+         clog << "Beginning simulation with " << n << " devices. Starting on day "
+            << start_day << endl;
+
+         // start locations at days number of days
+         Locations loc (locations_file, n, start_day);
+
+         D2DInstance sim (n, m, zipf, graph, cache_size, epsilon, radius,
+            thresholds, cache_hit_rates, loc, evolve, evolve_portion, algs[i], seed,
+            file_cache_count);
+
+         int time = 0;
+
+         while (sim.nextTimeStep()) {
+
+            time++;
+         };
+
+         if (algs[i] == "greedy") {
+
+            for (int i = 0; i < report_files; i++) {
+
+               file_cache_count.push_back(sim.numDevicesCache(i));
+            }
+         }
+
+         clog << "Simulation ran for " << time/86400 << " days." << endl;
+
+         // write results to file
+
+         ofstream output;
+         output.open(results_file, ios_base::app);
+
+         for (int i = 0; i < report_files; i++) {
+
+            sim.printFileResults(output, i);     
+         }
+
+         clog << "Results appended to file " << results_file << endl;         
       }
+
    }
 
-   cout << "Results written to file " << results_file << endl;
 
    cout << "=== CACHE SIMULATION COMPLETE ===" << endl << endl;
 

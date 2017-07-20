@@ -47,22 +47,34 @@ class D2DInstance {
    // thresholds is the min rank number for each threshold
    // cache_hit_rates is the rates at which files in each threshold should be cached
    // evolve is whether we want file popularity to evolve
+   // file_cache_count takes ranks to how many of that file should be cached, but it is
+   // only used for certain caching algorithms
    D2DInstance(const int& n, const int& m, const double& zipf,
       Graph& g, const int& cache_size, const double& epsilon, const int& radius, 
       vector<int>& thresholds, vector<double>& cache_hit_rates,
       Locations& locations, const bool& evolve,
-      const double& evolve_portion, const string& alg, const int& seed):
+      const double& evolve_portion, const string& alg, const int& seed,
+      const vector<int>& file_cache_count):
       d2d_cont (devices, radius, current_locations),
       file_rank (m, evolve, evolve_portion, seed),
       req_cont (n, m, zipf, file_rank, 0, seed), bs (devices),
       time (0), locations (locations) {
 
-      clog << "D2D instance created using " << alg << " caching.";
+      clog << "D2D instance created using " << alg << " caching." << endl;
 
       if (alg == "greedy") {
 
          this->cache_cont = unique_ptr<CacheControllerGreedy> (new CacheControllerGreedy
             (g, n, cache_size, epsilon, thresholds, cache_hit_rates, file_rank, alg));
+      }
+      else if (alg == "random1") {
+
+          this->cache_cont = unique_ptr<CacheControllerRandom1> (new CacheControllerRandom1
+            (n, cache_size, file_rank, alg, file_cache_count));        
+      }
+      else {
+
+         assert(false);
       }
 
       this->makeDevices(n, cache_size);
@@ -273,6 +285,24 @@ class D2DInstance {
       return used_space/(this->devices[0].cache_size*this->devices.size());
    }
 
+   // returns how many devices have file with ranking rank cached
+   int numDevicesCache(const int& rank) {
+
+      int count = 0;
+
+      int file = this->file_rank.getPopularFile(rank);
+
+      for (int i = 0; i < this->devices.size(); i++) {
+
+         if (this->devices[i].hasFile(file)) {
+
+            count++;
+         }
+      }
+
+      return count;
+   }
+
    // prints theoretical cache hit rate, actual cache hit rate, etc. for file
    // at certain rank
    // prints inside what algorithm was used to get it
@@ -306,6 +336,7 @@ class D2DInstance {
 
       os << "  <hitrate>" << cache_hits/this->num_requests.at(file) << "</hitrate>" << endl;
       os << "  <n>" << this->devices.size() << "</n>" << endl;
+      os << "  <size>" << this->numDevicesCache(rank) << "</size>" << endl;
       os << " </" << this->cache_cont->getAlgorithm() << ">" << endl;
 
    }

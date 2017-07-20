@@ -15,19 +15,19 @@ protected:
    // what algorithm we use to decide what and when to cache
    string alg;
 
+   // number of devices
+   int n;
+
+   // cache size
+   int c;
+
 public:
 
-   // thresholds takes the lower bound for the ith threshold
-   // cache_hit_rates are the corresponding cache hit rates for each threshold
    // n is the number of nodes (number of devices)
    // c is the number of files a single node can cache
    CacheController(const int& n, const int& c,
                    FileRanking& file_ranking, const string& alg): file_ranking(file_ranking),
-                   alg (alg) {
-
-      clog << "Cache controller created using algorithm " << this->alg << endl;
-
-   }
+                   alg (alg), n(n), c(c) { }
 
    string getAlgorithm() {
 
@@ -43,6 +43,25 @@ public:
    virtual bool cache() { assert(false); }
 
    virtual double getTheoreticalCacheHitRate(const int& file) { assert(false); };
+
+   // add a single device to cache for a file
+   void addToCache(const int& file, const int& device) {
+
+      if (this->to_cache.find(file) == this->to_cache.end()) {
+
+         this->to_cache[file] = vector<int> ();
+      }
+
+      for (int i = 0; i < this->to_cache[file].size(); i++) {
+
+         if (this->to_cache[file][i] == device) {
+
+            assert (false);
+         }
+      }
+
+      this->to_cache[file].push_back(device);
+   }
 
    // take a file and devices out of to_cache
    // subsequently delete them from to_cache
@@ -64,5 +83,43 @@ public:
 
       return false;
    }
+
+   // checks if device already has been added to cache file
+   bool alreadyAdded(const int& file, const int& device) {
+
+      if (this->to_cache.find(file) == this->to_cache.end()) {
+
+         return false;
+      }
+
+      for (int i = 0; i < this->to_cache.at(file).size(); i++) {
+
+         if (this->to_cache.at(file)[i] == device) {
+
+            return true;
+         }
+      }
+
+      return false;
+
+   }
+
+   void logToCache() {
+
+      clog << "Cache controller has the following queued to be cached:" << endl;
+
+      for (auto it = this->to_cache.begin(); it != this->to_cache.end(); it++) {
+
+         clog << "File " << it->first << ": ";
+
+         for (int i = 0; i < it->second.size(); i++) {
+
+            clog << it->second[i] << ", ";
+         }
+
+         clog << endl;
+      }
+
+   }   
 
 };

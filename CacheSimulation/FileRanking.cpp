@@ -68,8 +68,17 @@ class FileRanking {
 
       this->new_evolve_prob = (m*evolve_port)/(24*60*60);
 
-      clog << "File ranking initialized in order of id. Each second, there is a "
-         << this->new_evolve_prob << " probability that a new file will evolve." << endl;
+      if (this->evolve) {
+      
+         clog << "File ranking initialized in order of id. Each second, there is a "
+            << this->new_evolve_prob << " probability that a new file will evolve." << endl;
+
+      }
+      else {
+      
+         clog << "File ranking initialized in order of id." << endl;
+
+      }
 
    }
 
@@ -260,6 +269,9 @@ class FileRanking {
 
    // get the id of the i-st most popular file
    int getPopularFile(const int& i) {
+
+      assert (i >= 0);
+      assert (i < this->ranking.size());
 
       return this->ranking[i];
    }

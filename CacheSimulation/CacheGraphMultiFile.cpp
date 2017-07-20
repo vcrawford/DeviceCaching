@@ -7,7 +7,7 @@ class CacheGraphMultiFile {
    map<int, CacheGraph> cache_graphs;
 
    // the graph we are working with
-   Graph& graph;
+   Graph graph;
 
    // devices that are able to cache at least one more file
    // takes device id to true if can cache at least one more file
