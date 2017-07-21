@@ -25,7 +25,7 @@ public:
    // cache_hit_rates are the corresponding cache hit rates for each threshold
    // n is the number of nodes (number of devices)
    // c is the number of files a single node can cache
-   CacheControllerGreedy(Graph& g, const int& n, const int& c, const double& epsilon, 
+   CacheControllerGreedy(Graph& g, const int& n, const int& c, const double& epsilon,
                   vector<int>& thresholds, vector<double>& cache_hit_rates,
                   FileRanking& file_ranking, const string& alg):
                   CacheController(n, c, file_ranking, alg),

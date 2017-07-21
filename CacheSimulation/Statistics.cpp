@@ -10,6 +10,9 @@ public:
 	// number of requests over last hour
 	int requests_hour;
 
+	// sum of in transmission at every second over the last hour
+	int BS_in_transmission_hour_sum;
+
 	// file id to number hits over entire simulation
 	vector<int> hits_file;
 
@@ -19,21 +22,23 @@ public:
 	// the cache hit rate for each hour in the simulation
 	vector<double> hour_hit_rate;
 
-	// the number of files in transmission from the BS
+	// the average number of files in transmission in a second from the BS
 	// for each hour in the simulation
-	vector<int> BS_in_transmission;
+	vector<double> BS_in_transmission;
 
 	Statistics(int const& n, int const& m): hits_hour (0), requests_hour (0),
-		hits_file (m, 0), requests_file (m, 0) { }
+		hits_file (m, 0), requests_file (m, 0), BS_in_transmission_hour_sum (0) { }
 
 
 	void nextTimeStep(const int& time, int BS_transmission_count) {
 
-		if ((time % (60*60)) == 0) {
+		this->BS_in_transmission_hour_sum += BS_transmission_count;
 
-			// beginning of an hour
+		if ((time % (60*60)) == 1) {
 
-			this->BS_in_transmission.push_back(BS_transmission_count);
+			// first second of an hour
+
+			this->BS_in_transmission.push_back(BS_in_transmission_hour_sum/(60.0*60.0));
 
 			if (this->requests_hour > 0) {
 
@@ -46,6 +51,7 @@ public:
 
 			this->hits_hour = 0;
 			this->requests_hour = 0;
+			this->BS_in_transmission_hour_sum = 0;
 
 		}
 	}

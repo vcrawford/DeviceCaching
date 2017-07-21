@@ -344,6 +344,14 @@ class D2DInstance {
             << "</BSintransmission>" << endl;
       }
 
+      for (int i = 0; i < this->stat.hour_hit_rate.size(); i++) {
+
+         os << "  <hourhitrate hour=\"" << i << "\">"
+            << this->stat.hour_hit_rate[i]
+            << "</hourhitrate>" << endl;
+      }
+
+
       os << " </" << this->cache_cont->getAlgorithm() << ">" << endl;
 
 
