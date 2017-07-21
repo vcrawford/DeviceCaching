@@ -33,6 +33,13 @@ class BaseStation {
 
       if ((this->in_transmission.size() != 0) || (this->in_transmission_MC.size() != 0)) {
 
+	      while ((this->in_transmission.size() + this->in_transmission_MC.size()) > BaseStation::NUM_RBS) {
+
+            this->in_transmission.pop_back();
+
+            clog << "The BS was overloaded and had to drop a transmission." << endl;
+         }
+
          // the number of resource blocks each communication should get
          // just split them up equally
          int rbs = BaseStation::NUM_RBS/(this->in_transmission.size() + this->in_transmission_MC.size());
