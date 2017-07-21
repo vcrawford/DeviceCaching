@@ -23,6 +23,8 @@ end_n=500
 #thresholds="9 19 49 99"
 #cache_hit_rates="0.95 0.9 0.8 0.6"
 
+echo "<Experiment id=\"D2DSF_1\">" >> $results
+
 for ((i=$start_n;i<=$end_n;i=i + $inc_n));
 do
 
@@ -33,8 +35,10 @@ do
 
    rm $location
    rm $graph
+   rm $log
 done
 
+echo "</Experiment>"
 
 
 
