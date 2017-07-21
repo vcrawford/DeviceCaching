@@ -123,7 +123,7 @@ public:
          }
       }
 
-      return (count > 0);
+      return (count > 2);
 
    }
 

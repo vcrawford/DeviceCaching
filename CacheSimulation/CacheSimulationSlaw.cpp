@@ -31,7 +31,6 @@
 #include "BaseStation.cpp"
 #include "CacheController.cpp"
 #include "CacheControllerGreedy.cpp"
-#include "CacheControllerRandom1.cpp"
 #include "D2DInstance.cpp"
 
 using namespace std;
@@ -104,64 +103,42 @@ int main(int argc, char** argv) {
       cout << "Running single file caching experiments ..." << endl;
 
       // just reporting on the top files
-
-      // always do greedy first, so we can get the numbers for how many to place
-      // on the remaining algorithms
-      string algs [2] = {"greedy", "random1"};
-
-      // to be used in non-greedy algorithms to decide how many of each file should
-      // be placed
-      vector<int> file_cache_count;
-
-      for (int i = 0; i < 2; i++) {
-
-         clog << endl << "Beginning simulation for algorithm " << algs[i] << endl;
  
-         // read in contact graph from file
+      // read in contact graph from file
 
-         clog << "Reading contact graph from file " << contact_graph_file << "." << endl;
+      clog << "Reading contact graph from file " << contact_graph_file << "." << endl;
 
-         Graph graph (contact_graph_file);   
+      Graph graph (contact_graph_file);   
 
-         clog << "Beginning simulation with " << n << " devices. Starting on day "
-            << start_day << endl;
+      clog << "Beginning simulation with " << n << " devices. Starting on day "
+         << start_day << endl;
 
-         // start locations at days number of days
-         Locations loc (locations_file, n, start_day);
+      // start locations at days number of days
+       Locations loc (locations_file, n, start_day);
 
-         D2DInstance sim (n, m, zipf, graph, cache_size, epsilon, radius,
-            thresholds, cache_hit_rates, loc, evolve, evolve_portion, algs[i], seed,
-            file_cache_count);
+      D2DInstance sim (n, m, zipf, graph, cache_size, epsilon, radius,
+         thresholds, cache_hit_rates, loc, evolve, evolve_portion, "greedy", seed);
 
-         int time = 0;
+      int time = 0;
 
-         while (sim.nextTimeStep()) {
+      while (sim.nextTimeStep()) {
 
-            time++;
-         };
+         time++;
+      };
 
-         if (algs[i] == "greedy") {
+      clog << "Simulation ran for " << time/86400 << " days." << endl;
 
-            for (int i = 0; i < report_files; i++) {
+      // write results to file
 
-               file_cache_count.push_back(sim.numDevicesCache(i));
-            }
-         }
+      ofstream output;
+      output.open(results_file, ios_base::app);
 
-         clog << "Simulation ran for " << time/86400 << " days." << endl;
+      for (int i = 0; i < report_files; i++) {
 
-         // write results to file
-
-         ofstream output;
-         output.open(results_file, ios_base::app);
-
-         for (int i = 0; i < report_files; i++) {
-
-            sim.printFileResults(output, i);     
-         }
-
-         clog << "Results appended to file " << results_file << endl;         
+         sim.printFileResults(output, i);     
       }
+
+      clog << "Results appended to file " << results_file << endl;         
 
    }
 
