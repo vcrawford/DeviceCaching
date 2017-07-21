@@ -20,6 +20,7 @@
 #include "../Algorithms/GammaUtil.cpp"
 #include "../Algorithms/CacheGraph.cpp"
 #include "../Algorithms/Greedy.cpp"
+#include "Statistics.cpp"
 #include "CacheGraphMultiFile.cpp"
 #include "FileRanking.cpp"
 #include "Device.cpp"
@@ -31,6 +32,7 @@
 #include "BaseStation.cpp"
 #include "CacheController.cpp"
 #include "CacheControllerGreedy.cpp"
+#include "CacheControllerRandom1.cpp"
 #include "D2DInstance.cpp"
 
 using namespace std;
@@ -103,44 +105,121 @@ int main(int argc, char** argv) {
       cout << "Running single file caching experiments ..." << endl;
 
       // just reporting on the top files
+
+      // always do greedy first, so we can get the numbers for how many to place
+      // on the remaining algorithms
+      string algs [2] = {"greedy", "random1"};
+
+      // to be used in non-greedy algorithms to decide how many of each file should
+      // be placed
+      vector<int> file_cache_count;
+
+      for (int i = 0; i < 2; i++) {
+
+         clog << endl << "Beginning simulation for algorithm " << algs[i] << endl;
  
-      // read in contact graph from file
+         // read in contact graph from file
 
-      clog << "Reading contact graph from file " << contact_graph_file << "." << endl;
+         clog << "Reading contact graph from file " << contact_graph_file << "." << endl;
 
-      Graph graph (contact_graph_file);   
+         Graph graph (contact_graph_file);   
 
-      clog << "Beginning simulation with " << n << " devices. Starting on day "
-         << start_day << endl;
+         clog << "Beginning simulation with " << n << " devices. Starting on day "
+            << start_day << endl;
 
-      // start locations at days number of days
-       Locations loc (locations_file, n, start_day);
+         // start locations at days number of days
+         Locations loc (locations_file, n, start_day);
 
-      D2DInstance sim (n, m, zipf, graph, cache_size, epsilon, radius,
-         thresholds, cache_hit_rates, loc, evolve, evolve_portion, "greedy", seed);
+         int time = 0;
 
-      int time = 0;
+         unique_ptr<D2DInstance> sim;
 
-      while (sim.nextTimeStep()) {
+         if (algs[i] == "greedy") {
 
-         time++;
-      };
+            sim.reset(new D2DInstance (n, m, zipf, graph, cache_size, epsilon, radius,
+               thresholds, cache_hit_rates, loc, evolve, evolve_portion, algs[i], seed));
+           
+         }
+         else if (algs[i] == "random1") {
 
-      clog << "Simulation ran for " << time/86400 << " days." << endl;
+            sim.reset(new D2DInstance (n, m, zipf, cache_size, radius,
+               loc, algs[i], seed, file_cache_count));
 
-      // write results to file
+         }
 
-      ofstream output;
-      output.open(results_file, ios_base::app);
+         while (sim->nextTimeStep()) {
 
-      for (int i = 0; i < report_files; i++) {
+            time++;
+         };
 
-         sim.printFileResults(output, i);     
+         if (algs[i] == "greedy") {
+
+            for (int i = 0; i < report_files; i++) {
+
+               file_cache_count.push_back(sim->numDevicesCache(i));
+            }
+         }
+
+         clog << "Simulation ran for " << time/86400 << " days." << endl;
+
+         // write results to file
+
+         ofstream output;
+         output.open(results_file, ios_base::app);
+
+         for (int i = 0; i < report_files; i++) {
+
+            sim->printFileResults(output, i);     
+         }
+
+         clog << "Results appended to file " << results_file << endl;         
       }
 
-      clog << "Results appended to file " << results_file << endl;         
-
    }
+   else {
+
+      cout << "Running multi file caching experiments ..." << endl;
+
+      string algs [1] = {"greedy"};
+
+      for (int i = 0; i < 1; i++) {
+ 
+         // read in contact graph from file
+
+         clog << "Reading contact graph from file " << contact_graph_file << "." << endl;
+
+         Graph graph (contact_graph_file);   
+
+         clog << "Beginning simulation with " << n << " devices. Starting on day "
+            << start_day << endl;
+
+         // start locations at days number of days
+         Locations loc (locations_file, n, start_day);
+
+         D2DInstance sim (n, m, zipf, graph, cache_size, epsilon, radius,
+            thresholds, cache_hit_rates, loc, evolve, evolve_portion, algs[i], seed);
+
+         int time = 0;
+
+         while (sim.nextTimeStep()) {
+
+            time++;
+         };
+
+         clog << "Simulation ran for " << time/86400 << " days." << endl;
+
+         // write results to file
+
+         ofstream output;
+         output.open(results_file, ios_base::app);
+
+         sim.printMultiFileResults(output);
+
+         clog << "Results appended to file " << results_file << endl;
+
+      }
+   }
+
 
 
    cout << "=== CACHE SIMULATION COMPLETE ===" << endl << endl;

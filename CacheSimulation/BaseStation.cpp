@@ -20,6 +20,11 @@ class BaseStation {
 
    BaseStation(vector<Device>& devices): devices(devices) { }
 
+   int inTransmissionCount() {
+
+      return this->in_transmission.size() + this->in_transmission_MC.size();
+   }
+
    // update everything over a second
    void nextTimeStep() {
 

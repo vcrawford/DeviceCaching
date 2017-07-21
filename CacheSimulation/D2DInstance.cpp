@@ -28,11 +28,7 @@ class D2DInstance {
 
    int time;
 
-   // takes each file id to how many times it has been requested
-   map<int, int> num_requests;
-
-   // takes each file id to how many times it has been located in a device's own cache
-   map<int, int> own_cache;
+   Statistics stat;
 
    public:
 
@@ -47,12 +43,15 @@ class D2DInstance {
    // thresholds is the min rank number for each threshold
    // cache_hit_rates is the rates at which files in each threshold should be cached
    // evolve is whether we want file popularity to evolve
+   // file_cache_count takes ranks to how many of that file should be cached, but it is
+   // only used for certain caching algorithms
    D2DInstance(const int& n, const int& m, const double& zipf,
       Graph& g, const int& cache_size, const double& epsilon, const int& radius, 
       vector<int>& thresholds, vector<double>& cache_hit_rates,
       Locations& locations, const bool& evolve,
       const double& evolve_portion, const string& alg, const int& seed):
-      d2d_cont (devices, radius, current_locations),
+      stat (n, m),
+      d2d_cont (devices, radius, current_locations, stat),
       file_rank (m, evolve, evolve_portion, seed),
       req_cont (n, m, zipf, file_rank, 0, seed), bs (devices),
       time (0), locations (locations) {
@@ -77,6 +76,37 @@ class D2DInstance {
       this->time = 0;
 
    }
+
+   D2DInstance(const int& n, const int& m, const double& zipf,
+      const int& cache_size, const int& radius,
+      Locations& locations, const string& alg, const int& seed,
+      const vector<int>& file_cache_count):
+      stat (n, m),
+      d2d_cont (devices, radius, current_locations, stat),
+      file_rank (m, false, 0, seed),
+      req_cont (n, m, zipf, file_rank, 0, seed), bs (devices),
+      time (0), locations (locations) {
+
+      clog << "D2D instance created using " << alg << " caching." << endl;
+
+      if (alg == "random1") {
+
+          this->cache_cont = unique_ptr<CacheControllerRandom1> (new CacheControllerRandom1
+            (n, cache_size, file_rank, alg, file_cache_count));        
+      }
+      else {
+
+         assert(false);
+      }
+
+      this->makeDevices(n, cache_size);
+
+      // add popular files to be multicasted
+      this->cachePopular();
+
+      this->time = 0;
+
+   }   
 
    // Add initial num devices
    void makeDevices(const int& num, const int& cache_size) {
@@ -174,30 +204,10 @@ class D2DInstance {
       // have the BS updated any transmissions it has
       this->bs.nextTimeStep();
 
+      this->stat.nextTimeStep(time, this->bs.inTransmissionCount());
+
       return true;
 
-   }
-
-   // updates the total number of cache hits from a device's own cache
-   void countOwnCacheHit(const int& file) {
-
-      if (this->own_cache.find(file) == this->own_cache.end()) {
-
-         this->own_cache.insert( make_pair(file, 0) );
-      }
-
-      this->own_cache[file]++;
-   }
-
-   // updates the total number of requests that have occurred for each file
-   void countRequest(const int& file) {
-
-      if (this->num_requests.find(file) == this->num_requests.end()) {
-
-         this->num_requests.insert( make_pair(file, 0) );
-      }
-
-      this->num_requests[file]++;
    }
 
    // Check for new requests and give them to either the d2d controller or bs
@@ -216,12 +226,12 @@ class D2DInstance {
          return;
       }
 
-      this->countRequest(request_file);
+      this->stat.request(request_file);
 
       // first of all, see if this device has the file cached
       if (this->devices[request_device].hasFile(request_file)) {
 
-         this->countOwnCacheHit(request_file);
+         this->stat.hit(request_file);
 
          clog << "The requesting device has the file cached" << endl;
 
@@ -302,22 +312,6 @@ class D2DInstance {
 
       int file = this->file_rank.getPopularFile(rank);
 
-      assert (this->num_requests.find(file) != this->num_requests.end());
-
-      double cache_hits = 0;
-
-      if (this->own_cache.find(file) != this->own_cache.end()) {
-
-         // add in cache hits from a device's own cache
-         cache_hits += this->own_cache.at(file);
-      }
-
-      if (this->d2d_cont.success.find(file) != this->d2d_cont.success.end()) {
-
-         // add in d2d cache hits
-         cache_hits += this->d2d_cont.success.at(file);
-      }
-
       os << " <" << this->cache_cont->getAlgorithm() << ">" << endl;
 
       if (dynamic_cast<CacheControllerGreedy*> (this->cache_cont.get()) != NULL) {
@@ -326,13 +320,34 @@ class D2DInstance {
             << "</p>" << endl;         
       }
 
-      os << "  <hitrate>" << cache_hits/this->num_requests.at(file) << "</hitrate>" << endl;
+      if (this->stat.hasrequest(file)) {
+
+         os << "  <hitrate>" << this->stat.hitrate(file) << "</hitrate>" << endl;
+      }
+
       os << "  <n>" << this->devices.size() << "</n>" << endl;
       os << "  <size>" << this->numDevicesCache(rank) << "</size>" << endl;
       os << " </" << this->cache_cont->getAlgorithm() << ">" << endl;
 
    }
 
+   void printMultiFileResults(ostream& os) {
+
+      os << " <" << this->cache_cont->getAlgorithm() << ">" << endl;
+      os << "  <hitrateall>" << this->stat.hitrateall() << "</hitrateall>" << endl;
+      os << "  <n>" << this->devices.size() << "</n>" << endl;
+
+      for (int i = 0; i < this->stat.BS_in_transmission.size(); i++) {
+
+         os << "  <BSintransmission hour=\"" << i << "\">"
+            << this->stat.BS_in_transmission[i]
+            << "</BSintransmission>" << endl;
+      }
+
+      os << " </" << this->cache_cont->getAlgorithm() << ">" << endl;
+
+
+   }
 
 };
 

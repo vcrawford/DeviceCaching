@@ -17,24 +17,14 @@ class D2DController {
    // current locations of all devices
    vector< pair<int, int> >& current_locations;
 
+   Statistics& stat;
+
 public:
 
-   // takes the file to the number of successful D2D transmissions
-   map<int, int> success;
-
-   D2DController(vector<Device>& devices, const int& radius, vector< pair<int, int> >& current_locations)
-      : devices (devices), radius (radius), current_locations (current_locations) { }
-
-   // updates the total number of cache hits for this file
-   void countSuccess(const int& file) {
-
-      if (this->success.find(file) == this->success.end()) {
-
-         this->success.insert( make_pair(file, 0) );
-      }
-
-      this->success[file]++;
-   }
+   D2DController(vector<Device>& devices, const int& radius,
+      vector< pair<int, int> >& current_locations, Statistics& stat)
+      : devices (devices), radius (radius), current_locations (current_locations),
+        stat (stat) { }
 
    double getDistance(const int& device_1, const int& device_2) {
 
@@ -85,7 +75,7 @@ public:
                clog << "Transmission between " << it->device_send.id << " and "
                   << it->device_rec.id << " is complete" << endl;
 
-               this->countSuccess(it->file);
+               this->stat.hit(it->file);
 
                it = this->in_transmission.erase(it);
             }
