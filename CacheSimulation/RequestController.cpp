@@ -5,9 +5,19 @@ using namespace std;
 // Controls requests for files from devices
 class RequestController {
 
+public:
+
    // the probability per device that a request will come in
    // at the busiest part of the day
    static constexpr double max_prob_device = 0.001;
+
+   static constexpr int _7AM = 25200;
+
+   static constexpr int _1PM = 46800;
+
+   static constexpr int _7PM = 68400;
+
+   static constexpr int DAY = 86400;
 
    default_random_engine gen;
 
@@ -29,9 +39,6 @@ class RequestController {
    // how much the request probability will decrease per second from 6pm to 7am
    double dec_rate;
 
-   public:
-
-   // assumed to be created as 11:59 pm (will be 12am when first request is possible)
    RequestController(const int& n, const int& m, const double& zipf,
       FileRanking& ranking, const double& start_time, const int& seed):
       f_req(m, zipf, ranking, seed), d_req (n, seed), gen (seed), rand_0_1 (0, 1) {
@@ -40,12 +47,13 @@ class RequestController {
          double max_prob = n*this->max_prob_device;
 
          // must reach max_prob at 1pm by increasing from 0 at 7am
-         this->inc_rate = (max_prob)/(6*60*60);
+         this->inc_rate = (max_prob)/(RequestController::_1PM - RequestController::_7AM);
 
-         this->dec_rate = (max_prob)/(13*60*60);
+         this->dec_rate = (max_prob)/(RequestController::_7AM
+            + RequestController::DAY - RequestController::_7PM);
 
-         // rate at 11:59pm
-         this->current_prob = max_prob - this->dec_rate*(6*60*60 - 1);
+         // rate at 12am
+         this->current_prob = max_prob - this->dec_rate*(5*60*60);
 
          clog << "RequestController created with current request probability " << this->current_prob
             << ". Increase rate is set at " << this->inc_rate << " and decrease rate is set at "
@@ -70,15 +78,19 @@ class RequestController {
 
       int time_in_day = current_time%86400;
 
-      if (time_in_day < 25200) {
+      if (time_in_day == _7AM) {
+
+         this->current_prob = 0.0;
+      }
+      else if (time_in_day < RequestController::_7AM) {
 
          this->current_prob -= this->dec_rate;
       }
-      else if (time_in_day < 46800) {
+      else if (time_in_day < RequestController::_1PM) {
 
          this->current_prob += this->inc_rate;       
       }
-      else if (time_in_day < 68400) {
+      else if (time_in_day < RequestController::_7PM) {
 
          // do nothing
       }
@@ -87,7 +99,8 @@ class RequestController {
          this->current_prob -= this->dec_rate;
       }
 
-      assert ((this->current_prob >= 0) && (this->current_prob <= 1));
+      if (this->current_prob < 0) this->current_prob = 0;
+      if (this->current_prob > 1) this->current_prob = 1;
 
       clog << "The current request probability per second is " << this->current_prob << endl;
 
