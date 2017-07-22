@@ -44,6 +44,8 @@ public:
 
    virtual double getTheoreticalCacheHitRate(const int& file) { assert(false); };
 
+   virtual double getTheoreticalCacheHitRate() { assert(false); };
+
    // add a single device to cache for a file
    void addToCache(const int& file, const int& device) {
 

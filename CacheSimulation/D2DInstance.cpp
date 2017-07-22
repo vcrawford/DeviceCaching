@@ -365,6 +365,13 @@ class D2DInstance {
    void printMultiFileResults(ostream& os) {
 
       os << " <" << this->cache_cont->getAlgorithm() << ">" << endl;
+
+      if (dynamic_cast<CacheControllerMaxHitRate*> (this->cache_cont.get()) != NULL) {
+
+         os << "  <theoreticalrate>" << this->cache_cont->getTheoreticalCacheHitRate()
+            << "</theoreticalrate>" << endl;         
+      }
+
       os << "  <hitrateall>" << this->stat.hitrateall() << "</hitrateall>" << endl;
       os << "  <n>" << this->devices.size() << "</n>" << endl;
 

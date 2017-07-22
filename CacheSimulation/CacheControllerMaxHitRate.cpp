@@ -9,6 +9,8 @@ class CacheControllerMaxHitRate: public CacheController {
 
    FileRequest& file_req;
 
+   double theoretical_rate;
+
 public:
 
    // n is the number of nodes (number of devices)
@@ -27,16 +29,22 @@ public:
       return false;
    }
 
+   double getTheoreticalCacheHitRate() {
+
+      return this->theoretical_rate;
+   }
+
    bool cache() {
 
       vector<double> zipf_dist;
 
       this->file_req.getZipf(zipf_dist);
 
-      double rate = greedyMultiFile(this->graph, this->c, zipf_dist, this->to_cache);
+      this->theoretical_rate = greedyMultiFile(this->graph, this->c, zipf_dist, this->to_cache);
 
       clog << "The greedy algorithms for caching files to get the max cache hit rate "
-         << "has completed. The cache hit rate is expected to be " << rate << endl;
+         << "has completed. The cache hit rate is expected to be "
+         << this->theoretical_rate << endl;
 
    }
 
