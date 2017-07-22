@@ -45,6 +45,15 @@ class SlawRandom {
       return (int) min(30*exp( this->exponential (this->generator) ), (float) 5000);
    }
 
+   int howManyClusters() {
+
+      double rand = this->uniform_0_1 (this->generator);
+
+      if (rand < 0.3333) return 3;
+      else if (rand < 0.6666) return 4;
+      else return 5;
+   }
+
    // Pick a random cluster according to its size
    void getRandomCluster(int& picked) {
 
@@ -68,11 +77,13 @@ class SlawRandom {
 
    }
 
-   // Pick random points from a certain cluster, altogether 5% of cluster size
+   // Pick random points from a certain cluster, altogether 5-10% of cluster size
    void getRandomPointsInCluster(const int& cluster, vector< pair<int, int> >& picked) {
 
+      double percent = 0.05 + 0.05*(this->uniform_0_1 (this->generator));
+
       // add num_waypoints to new_waypoints
-      int num_waypoints = ceil(0.06*this->clusters[cluster].size());
+      int num_waypoints = ceil(percent*this->clusters[cluster].size());
 
       while (picked.size() < num_waypoints) {
 

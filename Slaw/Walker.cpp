@@ -116,12 +116,14 @@ class Walker {
       this->route_step = 1;
    }
 
-   // Pick 3 random clusters that this walker will visit each day
+   // Pick between 3 and 6 random clusters that this walker will visit each day
    void pickClusters() {
 
       this->clusters.clear();
 
-      while (this->clusters.size() < 3) {
+      int how_many = this->rand.howManyClusters();
+
+      while (this->clusters.size() < how_many) {
 
          int random_cluster;
          bool is_new;
