@@ -26,6 +26,7 @@ class BaseStation {
    }
 
    // update everything over a second
+
    void nextTimeStep() {
 
       clog << "There are " << this->in_transmission.size() + this->in_transmission_MC.size()
@@ -33,22 +34,32 @@ class BaseStation {
 
       if ((this->in_transmission.size() != 0) || (this->in_transmission_MC.size() != 0)) {
 
-	      while ((this->in_transmission.size() + this->in_transmission_MC.size()) > BaseStation::NUM_RBS) {
+         // count how many we have transmitted this time step. Can't send more than the number of RBs
+         int transmition_count = 0;
 
-            this->in_transmission.pop_back();
+         int rbs;
 
-            clog << "The BS was overloaded and had to drop a transmission." << endl;
+         if ((this->in_transmission.size() + this->in_transmission_MC.size()) > BaseStation::NUM_RBS) {
+
+            // going to need to cut some
+            rbs = 1;
          }
+         else {
 
-         // the number of resource blocks each communication should get
-         // just split them up equally
-         int rbs = BaseStation::NUM_RBS/(this->in_transmission.size() + this->in_transmission_MC.size());
-
-         assert (rbs > 0);
+            rbs = BaseStation::NUM_RBS/(this->in_transmission.size() + this->in_transmission_MC.size());
+         }
 
          clog << "Each communication will be allotted " << rbs << " resource blocks" << endl;
 
          for (auto it = this->in_transmission.begin(); it != this->in_transmission.end();) {
+
+            transmition_count++;
+
+            if (transmition_count > BaseStation::NUM_RBS) {
+
+               clog << "The BS is overloaded. Some data could not be transmitted." << endl;
+               break;
+            }
 
             bool completed;
 
@@ -61,10 +72,19 @@ class BaseStation {
 
                it = this->in_transmission.erase(it);
             }
-            else it++;
+           else it++;
          }
 
+            
          for (auto it = this->in_transmission_MC.begin(); it != this->in_transmission_MC.end(); it) {
+
+            transmition_count++;
+
+            if (transmition_count > BaseStation::NUM_RBS) {
+
+               clog << "The BS is overloaded. Some data could not be transmitted." << endl;
+               break;
+            }
 
             bool completed;
 

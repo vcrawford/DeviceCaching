@@ -20,6 +20,7 @@
 #include "../Algorithms/GammaUtil.cpp"
 #include "../Algorithms/CacheGraph.cpp"
 #include "../Algorithms/Greedy.cpp"
+#include "../Algorithms/GreedyMultiFile.cpp"
 #include "Statistics.cpp"
 #include "CacheGraphMultiFile.cpp"
 #include "FileRanking.cpp"
@@ -31,6 +32,7 @@
 #include "RequestController.cpp"
 #include "BaseStation.cpp"
 #include "CacheController.cpp"
+#include "CacheControllerMaxHitRate.cpp"
 #include "CacheControllerGreedy.cpp"
 #include "CacheControllerRandom1.cpp"
 #include "D2DInstance.cpp"
@@ -109,6 +111,7 @@ int main(int argc, char** argv) {
       // always do greedy first, so we can get the numbers for how many to place
       // on the remaining algorithms
       string algs [2] = {"greedy", "random1"};
+      //string algs[1] = {"greedy"};
 
       // to be used in non-greedy algorithms to decide how many of each file should
       // be placed
@@ -180,9 +183,9 @@ int main(int argc, char** argv) {
 
       cout << "Running multi file caching experiments ..." << endl;
 
-      string algs [1] = {"greedy"};
+      string algs [2] = {"greedy", "maxhitrate"};
 
-      for (int i = 0; i < 1; i++) {
+      for (int i = 0; i < 2; i++) {
  
          // read in contact graph from file
 
@@ -196,12 +199,23 @@ int main(int argc, char** argv) {
          // start locations at days number of days
          Locations loc (locations_file, n, start_day);
 
-         D2DInstance sim (n, m, zipf, graph, cache_size, epsilon, radius,
-            thresholds, cache_hit_rates, loc, evolve, evolve_portion, algs[i], seed);
+         unique_ptr<D2DInstance> sim;
+
+         if (algs[i] == "greedy") {
+
+            sim.reset(new D2DInstance (n, m, zipf, graph, cache_size, epsilon, radius,
+               thresholds, cache_hit_rates, loc, evolve, evolve_portion, algs[i], seed));
+           
+         }
+         else if (algs[i] == "maxhitrate") {
+
+            sim.reset(new D2DInstance (n, m, zipf, graph, cache_size, radius,
+               loc, evolve, evolve_portion, algs[i], seed));
+         }
 
          int time = 0;
 
-         while (sim.nextTimeStep()) {
+         while (sim->nextTimeStep()) {
 
             time++;
          };
@@ -213,7 +227,7 @@ int main(int argc, char** argv) {
          ofstream output;
          output.open(results_file, ios_base::app);
 
-         sim.printMultiFileResults(output);
+         sim->printMultiFileResults(output);
 
          clog << "Results appended to file " << results_file << endl;
 

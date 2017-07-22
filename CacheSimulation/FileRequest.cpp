@@ -22,11 +22,13 @@ class FileRequest {
    // for picking random rank (and therefore random file)
    uniform_real_distribution<double> rand_0_1;
 
+   int m;
+
    public:
 
    // m is the number of files
    FileRequest(const int& m, const double& zipf, FileRanking& fr, const int& seed):
-               gen (seed), rand_0_1 (0, 1), file_ranking (fr), zipf (zipf) {
+               gen (seed), rand_0_1 (0, 1), file_ranking (fr), zipf (zipf), m(m) {
 
       // calculate the denominator
 
@@ -58,6 +60,18 @@ class FileRequest {
       }
 
       return this->file_ranking.getPopularFile(pop_spot);
+
+   }
+
+   // fill vector will probability of requesting each file
+   void getZipf(vector<double>& zipf_dist) {
+
+      zipf_dist.clear();
+
+      for (int i = 0; i < this->m; i++) {
+
+         zipf_dist.push_back((1/pow(i+1, this->zipf))/this->denom);
+      }
 
    }
 

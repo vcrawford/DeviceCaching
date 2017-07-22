@@ -78,6 +78,37 @@ class D2DInstance {
    }
 
    D2DInstance(const int& n, const int& m, const double& zipf,
+      Graph& g, const int& cache_size, const int& radius, 
+      Locations& locations, const bool& evolve,
+      const double& evolve_portion, const string& alg, const int& seed):
+      stat (n, m),
+      d2d_cont (devices, radius, current_locations, stat),
+      file_rank (m, evolve, evolve_portion, seed),
+      req_cont (n, m, zipf, file_rank, 0, seed), bs (devices),
+      time (0), locations (locations) {
+
+      clog << "D2D instance created using " << alg << " caching." << endl;
+
+      if (alg == "maxhitrate") {
+
+         this->cache_cont = unique_ptr<CacheControllerMaxHitRate> (new CacheControllerMaxHitRate
+            (g, n, cache_size, file_rank, alg, this->req_cont.f_req));
+      }
+      else {
+
+         assert(false);
+      }
+
+      this->makeDevices(n, cache_size);
+
+      // add popular files to be multicasted
+      this->cachePopular();
+
+      this->time = 0;
+
+   }
+
+   D2DInstance(const int& n, const int& m, const double& zipf,
       const int& cache_size, const int& radius,
       Locations& locations, const string& alg, const int& seed,
       const vector<int>& file_cache_count):
