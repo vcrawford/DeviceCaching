@@ -34,7 +34,10 @@ public:
 
    int file;
 
-   CacheBSTransmission (vector< reference_wrapper<Device> >& devices, const int& file): file(file) {
+   bool cancelled;
+
+   CacheBSTransmission (vector< reference_wrapper<Device> >& devices, const int& file):
+      file(file), cancelled (false) {
 
       this->file = file;
 
@@ -42,7 +45,23 @@ public:
 
    }
 
+   // does not clear file from node's storage
+   // just turns off downloading flag
+   void cancelTransmission() {
+
+      assert(!this->cancelled);
+
+      this->cancelled = true;
+
+      for (auto it = this->devices.begin(); it != this->devices.end(); it++) {
+
+         it->get().cancelDownload(this->file);
+      }
+   }
+
    bool nextTimeStep(const int& rbs) {
+
+      assert (!this->cancelled);
 
       bool all_complete = true;
 

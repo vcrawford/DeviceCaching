@@ -184,6 +184,7 @@ int main(int argc, char** argv) {
       cout << "Running multi file caching experiments ..." << endl;
 
       string algs [2] = {"greedy", "maxhitrate"};
+      //string algs [1] = {"greedy"};
 
       for (int i = 0; i < 2; i++) {
  

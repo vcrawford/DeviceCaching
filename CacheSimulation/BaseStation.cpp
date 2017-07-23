@@ -137,6 +137,26 @@ class BaseStation {
 
    }
 
+   // cancel multicast occurring for a file
+   // does not remove partial file from the devices
+   void cancelMulticastTransmission(const int& file) {
+
+      for (auto it = this->in_transmission_MC.begin(); it != this->in_transmission_MC.end();) {
+
+         if (it->file == file) {
+
+            clog << "BS is cancelling multicast transmission of file " << file
+               << " to " << it->devices.size() << " devices." << endl;
+
+            it->cancelTransmission();
+
+            it = in_transmission_MC.erase(it);
+         }
+         else it++;
+      }
+
+   }
+
    // send file to device
    void newRequest(const int& device_id, const int& file) {
 

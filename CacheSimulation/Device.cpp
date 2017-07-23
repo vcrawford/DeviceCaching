@@ -25,6 +25,22 @@ class Device {
    // initializes with 0 of every file
    Device(const int& id, const int& cache_size): id(id), is_downloading (false), cache_size (cache_size) {}
 
+   void cancelDownload(const int& file) {
+
+      assert(this->is_downloading);
+      assert(this->stored_files.find(file) != this->stored_files.end());
+
+      this->is_downloading = false;
+
+   }
+
+   void removeFile(const int& file) {
+
+      assert (this->stored_files.find(file) != this->stored_files.end());
+
+      this->stored_files.erase(file);
+   }
+
    // compute the number of files cached, meaning stored entirely
    // if a device is downloading a file, and not caching it, it's storage won't
    // be 1
@@ -55,10 +71,23 @@ class Device {
 
    }
 
+   // has any part of file, not necessarily the whole thing
+   bool hasFilePart(const int& file) {
+
+     if (this->stored_files.find(file) != this->stored_files.end()) {
+
+         return true;
+      }
+
+      return false;
+   }
+
    // adds how_much of file, capping at 1
    // returns whether it has the entire file or not
    // has option to cache or not when finished
    bool downloadFile(const int& file, const double& how_much, const bool& cache) {
+
+      clog << "Device " << this->id << " is downloading file " << file << endl;
 
       assert (this->cache_size - this->stored_files.size() >= 0);
 

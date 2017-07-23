@@ -68,12 +68,7 @@ class D2DInstance {
          assert(false);
       }
 
-      this->makeDevices(n, cache_size);
-
-      // add popular files to be multicasted
-      this->cachePopular();
-
-      this->time = 0;
+      setup(n, cache_size);
 
    }
 
@@ -99,12 +94,7 @@ class D2DInstance {
          assert(false);
       }
 
-      this->makeDevices(n, cache_size);
-
-      // add popular files to be multicasted
-      this->cachePopular();
-
-      this->time = 0;
+      setup(n, cache_size);
 
    }
 
@@ -130,14 +120,20 @@ class D2DInstance {
          assert(false);
       }
 
+      setup(n, cache_size);
+
+   } 
+
+
+   void setup(const int& n, const int& cache_size) {
+
       this->makeDevices(n, cache_size);
 
       // add popular files to be multicasted
       this->cachePopular();
 
-      this->time = 0;
-
-   }   
+      this->time = 0;  
+   }
 
    // Add initial num devices
    void makeDevices(const int& num, const int& cache_size) {
@@ -160,6 +156,33 @@ class D2DInstance {
       while (this->cache_cont->takeNextToCache(file, device_ids)) {
 
          this->bs.newCache(file, device_ids);
+      }
+
+   }
+
+   void uncache() {
+
+      int file;
+
+      while (this->cache_cont->takeNextToUncache(file)) {
+
+         clog << "Uncaching file " << file << " from all devices..." << endl;
+
+         // cancel transmission if it exists
+         this->bs.cancelMulticastTransmission(file);
+
+         // clear out from all devices
+         for (int i = 0; i < this->devices.size(); i++) {
+
+            if (this->devices[i].hasFilePart(file)) {
+
+               clog << "Uncaching file " << file << " from device " << i << endl;
+
+               this->devices[i].removeFile(file);  
+            }
+            
+            assert(!this->devices[i].hasFile(file));
+         }
       }
 
    }
@@ -201,7 +224,9 @@ class D2DInstance {
 
          if (this->cache_cont->nextTimeStep()) {
 
-            // there is something new to cache
+            // there is something new to cache or uncache
+
+            this->uncache();
 
             this->cachePopular();
          }
@@ -375,19 +400,19 @@ class D2DInstance {
       os << "  <hitrateall>" << this->stat.hitrateall() << "</hitrateall>" << endl;
       os << "  <n>" << this->devices.size() << "</n>" << endl;
 
-      for (int i = 0; i < this->stat.BS_in_transmission.size(); i++) {
+      //for (int i = 0; i < this->stat.BS_in_transmission.size(); i++) {
 
-         os << "  <BSintransmission hour=\"" << i << "\">"
-            << this->stat.BS_in_transmission[i]
-            << "</BSintransmission>" << endl;
-      }
+      //   os << "  <BSintransmission hour=\"" << i << "\">"
+      //      << this->stat.BS_in_transmission[i]
+      //      << "</BSintransmission>" << endl;
+      //}
 
-      for (int i = 0; i < this->stat.hour_hit_rate.size(); i++) {
+      //for (int i = 0; i < this->stat.hour_hit_rate.size(); i++) {
 
-         os << "  <hourhitrate hour=\"" << i << "\">"
-            << this->stat.hour_hit_rate[i]
-            << "</hourhitrate>" << endl;
-      }
+      //   os << "  <hourhitrate hour=\"" << i << "\">"
+      //      << this->stat.hour_hit_rate[i]
+      //      << "</hourhitrate>" << endl;
+      //}
 
 
       os << " </" << this->cache_cont->getAlgorithm() << ">" << endl;

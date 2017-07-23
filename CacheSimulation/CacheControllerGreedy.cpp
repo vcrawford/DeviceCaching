@@ -19,6 +19,9 @@ class CacheControllerGreedy: public CacheController {
    // the theoretical cache graph construct
    CacheGraphMultiFile cache_graphs;
 
+   // the last attempted cache rate for each file (by id)
+   vector<double> attempted_rates;
+
 public:
 
    // thresholds takes the lower bound for the ith threshold
@@ -30,7 +33,8 @@ public:
                   FileRanking& file_ranking, const string& alg):
                   CacheController(n, c, file_ranking, alg),
                   cache_graphs (g, n, c, epsilon), thresholds (thresholds),
-                  cache_hit_rates (cache_hit_rates) {
+                  cache_hit_rates (cache_hit_rates),
+                  attempted_rates (file_ranking.getNumFiles(), 0.0) {
 
       clog << "Cache controller has popularity thresholds ";
 
@@ -52,6 +56,21 @@ public:
 
       this->cache();
 
+   }
+
+   // return the rank of the least popular, but cached, file
+   // if there doesn't exist one, returns -1
+   int getLeastPopularCached() {
+
+      for (int i = this->file_ranking.getNumFiles() - 1; i >= 0; i--) {
+
+         if (this->cache_graphs.isCached(this->file_ranking.getPopularFile(i))) { 
+ 
+            return i;
+         }
+      }
+
+      return -1;
    }
 
    // get the cache hit rate that a file should be cached at
@@ -76,49 +95,120 @@ public:
    // if something has been added, returns true
    bool nextTimeStep() {
 
-      return this->cache();
+      bool uncache = this->uncache();
+
+      bool cache = this->cache();
+
+      return (uncache || cache);
    }
 
    // adds to this->to_cache if needed
-   // returns whether there is anything new to cache
    bool cache() {
-
-      // what threshold we are at
-      int t = 0;
 
       // iterate in order of popularity over the files caching each
       // i is the ist most popular file, not the file with id i
-      // (initially, they happen to be the same, but can't assume that in general)
 
       for (int i = 0; i < this->file_ranking.getNumFiles(); i++) {
 
-         if (i > this->thresholds[t]) {
+         // cache hit rate this file should be at
+         double rate = this->getRate(i);
 
-            // we are below the min rank for this threshold
-            t++;
+         // check if we are beyond files that get cached
+         if (rate == 0) break;
+
+         // we are at a rank that should be cached
+
+         // the corresponding file
+         int file = this->file_ranking.getPopularFile(i);
+
+         // check what rate it has been cached at (successful or not)
+         if (this->attempted_rates[file] == rate) {
+
+            // already attempted (successful or not) to cache it at the appropriate rate
+            continue;
          }
+         else {
 
-         if (t == this->thresholds.size()) {
+            // more caching must be done
 
-            // don't cache beyond this level
-            break;
-         }
+            clog << "File " << file << " should be cached at a higher rate ("
+               << rate << ")..." << endl;
 
-         // So we do need to cache this file at the threshold's rate
+            this->attempted_rates[file] = rate;
 
-         assert(t < cache_hit_rates.size());
+            vector<int> file_cache_nodes;
 
-         vector<int> file_cache_nodes;
+            if (this->cache_graphs.cacheFile(file, rate, file_cache_nodes)) {
 
-         if (this->cache_graphs.cacheFile(this->file_ranking.getPopularFile(i), cache_hit_rates[t],
-            file_cache_nodes)) {
+               // there was room to cache it
+               this->to_cache[file] = file_cache_nodes;
 
-            this->to_cache[this->file_ranking.getPopularFile(i)] = file_cache_nodes;
+               clog << "There was enough room to cache it." << endl;
+
+            }
+            else {
+
+               clog << "There was not enough room to cache it." << endl;
+            }        
          }
       }
 
       return (this->to_cache.size() > 0);
 
+   }
+
+   bool uncache() {
+
+      // iterate in order of popularity over the files caching each
+      // i is the ist most popular file, not the file with id i
+
+      for (int i = 0; i < this->file_ranking.getNumFiles(); i++) {
+
+         // determine cache hit rate for ith ranked file
+
+         double rate = this->getRate(i);
+
+         // the file corresponding to this rate
+         int file = this->file_ranking.getPopularFile(i);
+
+         if (this->attempted_rates[file] > rate) {
+
+            // cached at too high of a rate
+
+            clog << "Should uncache file " << file << " which is currently at rank "
+               << i << endl;
+
+            for (auto it = this->to_uncache.begin(); it != this->to_uncache.end(); it++) {
+
+               assert(*it != file);                    
+            }
+
+            // despite the attempted rate being of a certain value, it's still possible a file
+            // was never actually cached
+            if (this->cache_graphs.isCached(file)) {
+
+               this->cache_graphs.uncache(file);
+
+               this->to_uncache.push_back(file);
+            }
+
+            this->attempted_rates[file] = 0.0;
+         }
+      }
+
+      return (this->to_uncache.size() > 0);
+
+   }
+
+   // the rate that we want a certain rank to be cached at
+   double getRate(const int& rank) {
+
+      for (int i = 0; i < this->thresholds.size(); i++) {
+
+         if (this->thresholds[i] >= rank) return cache_hit_rates[i];
+      }
+
+      return 0;
    }
 
 };

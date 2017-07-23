@@ -16,6 +16,9 @@ class CacheGraphMultiFile {
    // device ids to how many files they can still cache
    vector<int> available_cache;
 
+   // cache space
+   int c;
+
    // the epsilon for running the greedy algorithm
    double epsilon;
 
@@ -27,16 +30,53 @@ class CacheGraphMultiFile {
    // epsilon is for the greedy algorithm
    // assumes we start out with all caches empty
    CacheGraphMultiFile(Graph& g, const int& n, const int& c, const double& epsilon):
-                       graph (g), can_cache (n, true), available_cache (n, c), epsilon (epsilon) {
+                       graph (g), can_cache (n, true), available_cache (n, c), epsilon (epsilon),
+                       c (c) {
 
       assert (epsilon > 0);
    }
 
+   // returns whether a file is supposed to be cached or not
+   bool isCached(const int& fileid) {
+
+      if (this->cache_graphs.find(fileid) == this->cache_graphs.end()) return false;
+
+      return (this->cache_graphs.at(fileid).big_gamma > 0);      
+   }
+
+   // uncache a file that is cached
+   void uncache(const int& fileid) {
+
+      assert(this->cache_graphs.find(fileid) != this->cache_graphs.end());
+
+      vector<int> cache_nodes;
+
+      this->cache_graphs.at(fileid).getCacheNodes(cache_nodes);
+
+      assert(cache_nodes.size() > 0);
+
+      this->cache_graphs.erase(fileid);
+
+      for (int i = 0; i < cache_nodes.size(); i++) {
+
+         if (!this->can_cache[cache_nodes[i]]) {
+
+            clog << "Device " << cache_nodes[i] << " has available space now." << endl;
+         }
+
+         this->can_cache[cache_nodes[i]] = true;
+         this->available_cache[cache_nodes[i]]++;
+
+         assert(this->available_cache[cache_nodes[i]] <= this->c);
+      }
+
+   }
+
+
    // Determine what nodes to cache a file in in order to get a cache hit rate of p
    // for that file, and then cache those nodes.
    // If we cannot get that rate, just don't cache.
-   // Returns false if either it is not possible to cache at this rate, or there is no new nodes
-   // to cache
+   // Returns false if it is not possible to cache at this rate
    bool cacheFile (const int& file_id, const double& p, vector<int>& nodes) {
 
       assert((p < 1) && (this->epsilon < p));
@@ -46,16 +86,7 @@ class CacheGraphMultiFile {
          this->cache_graphs.insert( make_pair(file_id, CacheGraph (this->graph, this->can_cache)) );
       }
 
-      if (this->cache_graphs.at(file_id).big_gamma >= p - this->epsilon) {
-
-         // already cached sufficiently
-         return false;
-      }
-
       if (greedy(this->cache_graphs.at(file_id), nodes, p, this->epsilon) >= p - this->epsilon) {
-
-         clog << "File " << file_id << " should be cached on " << nodes.size()
-            << " devices in order to have a cache hit rate of " << p << endl;
 
          this->cache_graphs.at(file_id).addCacheNodes(nodes);
 

@@ -12,6 +12,9 @@ protected:
    // and has not already been
    map<int, vector<int> > to_cache;
 
+   // file ids to uncache
+   list<int> to_uncache;
+
    // what algorithm we use to decide what and when to cache
    string alg;
 
@@ -37,10 +40,6 @@ public:
    // adds any new caching that must be done
    // if something has been added, returns true
    virtual bool nextTimeStep() { assert(false); }
-
-   // adds to this->to_cache if needed
-   // returns whether there is anything new to cache
-   virtual bool cache() { assert(false); }
 
    virtual double getTheoreticalCacheHitRate(const int& file) { assert(false); };
 
@@ -74,6 +73,8 @@ public:
 
       if (it != this->to_cache.end()) {
 
+         assert(it->second.size() > 0);
+
          file = it->first;
 
          device_ids = it->second;
@@ -85,6 +86,22 @@ public:
 
       return false;
    }
+
+   bool takeNextToUncache(int& file) {
+
+      auto it = this->to_uncache.begin();
+
+      if (it != this->to_uncache.end()) {
+
+         file = *it;
+
+         to_uncache.erase(it);
+
+         return true;
+      }
+
+      return false;
+   }   
 
    // checks if device already has been added to cache file
    bool alreadyAdded(const int& file, const int& device) {
