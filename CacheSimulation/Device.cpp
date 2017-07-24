@@ -21,10 +21,18 @@ class Device {
    // the size of this device's cache
    int cache_size;
 
+   // a queue of recently downloaded files
+   // only accurate if devices always cache
+   queue<int> file_downloads;
+
+   // do we always cache the lastest files
+   bool always_cache;
+
    // m is the number of files
    // initializes with 0 of every file
-   Device(const int& id, const int& cache_size): id(id), is_downloading (false),
-      cache_size (cache_size) {}
+   Device(const int& id, const int& cache_size, bool always_cache):
+      id(id), is_downloading (false), cache_size (cache_size),
+      always_cache (always_cache) {}
 
    void cancelDownload(const int& file) {
 
@@ -88,7 +96,7 @@ class Device {
    // has option to cache or not when finished
    bool downloadFile(const int& file, const double& how_much, const bool& cache) {
 
-      assert ((this->cache_size - this->stored_files.size()) >= -1);
+      assert ((this->cache_size - (int)this->stored_files.size()) >= -1);
 
       assert ((how_much > 0) && (how_much <= 1));
 
@@ -105,9 +113,30 @@ class Device {
 
       if (this->stored_files[file] >= 1) {
 
-         if (cache) {
+         if (cache || this->always_cache) {
 
-            this->stored_files[file] = 1;
+            clog << "Device " << this->id << " is caching file " << file << endl;
+
+            this->stored_files[file] = 1.0;
+
+            if (this->always_cache) {
+
+               this->file_downloads.push(file);
+
+               if (this->file_downloads.size() > this->cache_size) {
+
+                  int oldest = this->file_downloads.front();
+
+                  assert(this->stored_files.find(oldest) != this->stored_files.end());
+
+                  clog << "Device " << this->id << " is uncaching file " << oldest << endl;
+
+                  this->stored_files.erase(oldest);
+                  this->file_downloads.pop();
+
+                  assert(this->file_downloads.size() == this->cache_size);
+               }
+            }
          }
          else {
 

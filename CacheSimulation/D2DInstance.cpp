@@ -140,13 +140,23 @@ class D2DInstance {
 
          this->cache_cont = unique_ptr<CacheControllerTop> (new CacheControllerTop
             (n, cache_size, file_rank, alg));
+
+         this->setup(n, cache_size);
+      }
+      else if (alg == "request") {
+
+         this->cache_cont = unique_ptr<CacheControllerNone> (new CacheControllerNone
+            (n, cache_size, file_rank, alg));
+
+         this->makeDevicesCaching(n, cache_size);
+
+         this->time = 0;  
+
       }
       else {
 
          assert(false);
       }
-
-      setup(n, cache_size);
 
    }
 
@@ -161,16 +171,26 @@ class D2DInstance {
       this->time = 0;  
    }
 
-   // Add initial num devices
+   // Add initial num devices (not always caching)
    void makeDevices(const int& num, const int& cache_size) {
  
       // add devices in with ids 0,..,n-1
       for (int i = 0; i < num; i++) {
 
-         this->devices.push_back(Device(i, cache_size));
+         this->devices.push_back(Device(i, cache_size, false));
       }
 
    }
+
+   void makeDevicesCaching(const int& num, const int& cache_size) {
+ 
+      // add devices in with ids 0,..,n-1
+      for (int i = 0; i < num; i++) {
+
+         this->devices.push_back(Device(i, cache_size, true));
+      }
+
+   }   
 
    // get any caching that must be done for popular files
    void cachePopular() {

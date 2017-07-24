@@ -14,6 +14,7 @@
 #include <functional>
 #include <cassert>
 #include <memory>
+#include <queue>
 #include "../Slaw/Locations.cpp"
 #include "../Slaw/ContactGraphUtil.cpp"
 #include "../Algorithms/Graph.cpp"
@@ -32,9 +33,11 @@
 #include "RequestController.cpp"
 #include "BaseStation.cpp"
 #include "CacheController.cpp"
+#include "CacheControllerNone.cpp"
 #include "CacheControllerMaxHitRate.cpp"
 #include "CacheControllerGreedy.cpp"
 #include "CacheControllerRandom1.cpp"
+#include "CacheControllerTop.cpp"
 #include "D2DInstance.cpp"
 
 using namespace std;
@@ -183,10 +186,9 @@ int main(int argc, char** argv) {
 
       cout << "Running multi file caching experiments ..." << endl;
 
-      string algs [2] = {"greedy", "maxhitrate"};
-      //string algs [1] = {"greedy"};
+      string algs [4] = {"greedy", "maxhitrate", "topfiles", "request"};
 
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 4; i++) {
  
          // read in contact graph from file
 
@@ -211,6 +213,11 @@ int main(int argc, char** argv) {
          else if (algs[i] == "maxhitrate") {
 
             sim.reset(new D2DInstance (n, m, zipf, graph, cache_size, radius,
+               loc, evolve, evolve_portion, algs[i], seed));
+         }
+         else if ((algs[i] == "topfiles") || (algs[i] == "request")) {
+
+            sim.reset(new D2DInstance (n, m, zipf, cache_size, radius,
                loc, evolve, evolve_portion, algs[i], seed));
          }
 
