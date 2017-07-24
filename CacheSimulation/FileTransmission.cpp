@@ -36,13 +36,31 @@ public:
 
    bool cancelled;
 
+   // has any data actually been submitted yet
+   bool started;
+
    CacheBSTransmission (vector< reference_wrapper<Device> >& devices, const int& file):
-      file(file), cancelled (false) {
+      file(file), cancelled (false), started (false) {
 
       this->file = file;
 
       this->devices = devices;
 
+   }
+
+   // returns whether the devices are ready to begin transmission
+   // i.e., none are downloading
+   // can only be called if no data has yet been transferred
+   bool devicesReady() {
+
+      assert(!this->started);
+
+      for (int i = 0; i < this->devices.size(); i++) {
+
+         if (this->devices[i].get().is_downloading) return false;
+      }
+
+      return true;
    }
 
    // does not clear file from node's storage
@@ -74,6 +92,8 @@ public:
             all_complete = single_complete && all_complete;
          }
       }
+
+      this->started = true;
 
       return all_complete;
    }

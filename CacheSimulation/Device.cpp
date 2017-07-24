@@ -12,7 +12,7 @@ class Device {
    // a map of file id to how much of that file this device has
    // (a value between 0 and 1)
    // some files stay after being downloaded (like cache files) while
-   // others are gotten rid of once they user has the full file
+   // others are gotten rid of once the user has the full file
    map<int, double> stored_files;
 
    // whether this device is currently downloading a file (from BS or another device)
@@ -23,7 +23,8 @@ class Device {
 
    // m is the number of files
    // initializes with 0 of every file
-   Device(const int& id, const int& cache_size): id(id), is_downloading (false), cache_size (cache_size) {}
+   Device(const int& id, const int& cache_size): id(id), is_downloading (false),
+      cache_size (cache_size) {}
 
    void cancelDownload(const int& file) {
 
@@ -87,9 +88,7 @@ class Device {
    // has option to cache or not when finished
    bool downloadFile(const int& file, const double& how_much, const bool& cache) {
 
-      clog << "Device " << this->id << " is downloading file " << file << endl;
-
-      assert (this->cache_size - this->stored_files.size() >= 0);
+      assert ((this->cache_size - this->stored_files.size()) >= -1);
 
       assert ((how_much > 0) && (how_much <= 1));
 
@@ -100,7 +99,7 @@ class Device {
          this->stored_files.insert( make_pair(file, 0) );
       }
 
-      assert (this->stored_files[file] != 1);
+      //assert (this->stored_files[file] != 1);
 
       this->stored_files[file] += how_much;
 

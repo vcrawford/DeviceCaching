@@ -76,7 +76,21 @@ class BaseStation {
          }
 
             
-         for (auto it = this->in_transmission_MC.begin(); it != this->in_transmission_MC.end(); it) {
+         for (auto it = this->in_transmission_MC.begin(); it != this->in_transmission_MC.end();) {
+
+            /**
+            if (!it->started) {
+
+               if (!it->devicesReady()) {
+
+                  clog << "The multicast transmission of file " << it->file << " to "
+                     << it->devices.size() << " devices will wait until all devices are ready."
+                     << endl;
+
+                  ++it;
+                  continue;
+               }
+            }*/
 
             transmition_count++;
 
