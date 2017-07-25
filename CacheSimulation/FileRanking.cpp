@@ -16,15 +16,13 @@ class FileRanking {
    // whether we would like this ranking to evolve over time
    bool evolve;
 
-   // probability that in any second a new file will be added to those
-   // currently evolving
-   double new_evolve_prob;
+   int evolve_num;
 
    // the probability over any second that a file will move up/down
    // a ranking if it is an unstable state (moves_up is non-zero, or 
    // it's moves_up is zero, it's stable time is 0, and its moves_down is
    // non-zero)
-   static constexpr double move_prob = 0.015;
+   static constexpr double move_prob = 0.05;
 
    // the probability we will pick a random file to evolve
 
@@ -57,21 +55,20 @@ class FileRanking {
    // m is the number of files
    // ranking is initialized to be in order of id
    // evolve is whether files evolve in popularity or not
-   // evolve_port is how many files are expected to begin evolving in a day
-   FileRanking(const int& m, const bool& evolve, const double& evolve_port,
-      const int& seed): m (m), evolve (evolve), gen (seed), rand (0, 1) {
+   // evolve_num is how many files should be evolving at any point in time
+   FileRanking(const int& m, const bool& evolve, const int& evolve_num,
+      const int& seed): m (m), evolve (evolve), gen (seed), evolve_num (evolve_num),
+      rand (0, 1) {
 
       for (int i = 0; i < m; i++) {
 
          this->ranking.push_back(i);
       }
 
-      this->new_evolve_prob = (m*evolve_port)/(24*60*60);
-
       if (this->evolve) {
       
-         clog << "File ranking initialized in order of id. Each second, there is a "
-            << this->new_evolve_prob << " probability that a new file will evolve." << endl;
+         clog << "File ranking initialized in order of id. At any moment, there are "
+            << this->evolve_num << " files evolving." << endl;
 
       }
       else {
@@ -117,7 +114,7 @@ class FileRanking {
          clog << "There are " << this->evolving.size() << " files currently evolving in popularity."
             << endl;
 
-         if (this->rand(this->gen) < this->new_evolve_prob) {
+         while (this->evolving.size() < this->evolve_num) {
 
             this->evolveNewFile();
          }
@@ -168,8 +165,8 @@ class FileRanking {
 
       this->moves_down[fileid] = rank - new_rank;
 
-      // stable for a random, uniformly distributed time between 0 seconds and 1 day
-      this->stable_time[fileid] = 86400*this->rand(this->gen);
+      // stable for a random, uniformly distributed time between 0 seconds and 3 days
+      this->stable_time[fileid] = 3*86400*this->rand(this->gen);
 
       clog << "Evolving file " << fileid << " from rank " << rank
          << " to rank " << new_rank <<". It will move up " << this->moves_up[fileid] <<

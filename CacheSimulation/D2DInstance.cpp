@@ -49,10 +49,10 @@ class D2DInstance {
       Graph& g, const int& cache_size, const double& epsilon, const int& radius, 
       vector<int>& thresholds, vector<double>& cache_hit_rates,
       Locations& locations, const bool& evolve,
-      const double& evolve_portion, const string& alg, const int& seed):
+      const int& evolve_num, const string& alg, const int& seed):
       stat (n, m),
       d2d_cont (devices, radius, current_locations, stat),
-      file_rank (m, evolve, evolve_portion, seed),
+      file_rank (m, evolve, evolve_num, seed),
       req_cont (n, m, zipf, file_rank, 0, seed), bs (devices),
       time (0), locations (locations) {
 
@@ -75,10 +75,10 @@ class D2DInstance {
    D2DInstance(const int& n, const int& m, const double& zipf,
       Graph& g, const int& cache_size, const int& radius, 
       Locations& locations, const bool& evolve,
-      const double& evolve_portion, const string& alg, const int& seed):
+      const int& evolve_num, const string& alg, const int& seed):
       stat (n, m),
       d2d_cont (devices, radius, current_locations, stat),
-      file_rank (m, evolve, evolve_portion, seed),
+      file_rank (m, evolve, evolve_num, seed),
       req_cont (n, m, zipf, file_rank, 0, seed), bs (devices),
       time (0), locations (locations) {
 
@@ -127,10 +127,10 @@ class D2DInstance {
    D2DInstance(const int& n, const int& m, const double& zipf,
       const int& cache_size, const int& radius, 
       Locations& locations, const bool& evolve,
-      const double& evolve_portion, const string& alg, const int& seed):
+      const int& evolve_num, const string& alg, const int& seed):
       stat (n, m),
       d2d_cont (devices, radius, current_locations, stat),
-      file_rank (m, evolve, evolve_portion, seed),
+      file_rank (m, evolve, evolve_num, seed),
       req_cont (n, m, zipf, file_rank, 0, seed), bs (devices),
       time (0), locations (locations) {
 
@@ -152,6 +152,13 @@ class D2DInstance {
 
          this->time = 0;  
 
+      }
+      else if (alg == "none") {
+
+         this->cache_cont = unique_ptr<CacheControllerNone> (new CacheControllerNone
+            (n, cache_size, file_rank, alg));
+
+         this->setup(n, cache_size); 
       }
       else {
 
@@ -446,20 +453,26 @@ class D2DInstance {
       os << "  <hitrateall>" << this->stat.hitrateall() << "</hitrateall>" << endl;
       os << "  <n>" << this->devices.size() << "</n>" << endl;
 
-      //for (int i = 0; i < this->stat.BS_in_transmission.size(); i++) {
+      for (int i = 0; i < this->stat.BS_in_transmission.size(); i++) {
 
-      //   os << "  <BSintransmission hour=\"" << i << "\">"
-      //      << this->stat.BS_in_transmission[i]
-      //      << "</BSintransmission>" << endl;
-      //}
+         os << "  <BSintransmission hour=\"" << i << "\">"
+            << this->stat.BS_in_transmission[i]
+            << "</BSintransmission>" << endl;
+      }
 
-      //for (int i = 0; i < this->stat.hour_hit_rate.size(); i++) {
+      for (int i = 0; i < this->stat.hour_hit_rate.size(); i++) {
 
-      //   os << "  <hourhitrate hour=\"" << i << "\">"
-      //      << this->stat.hour_hit_rate[i]
-      //      << "</hourhitrate>" << endl;
-      //}
+         os << "  <hourhitrate hour=\"" << i << "\">"
+            << this->stat.hour_hit_rate[i]
+            << "</hourhitrate>" << endl;
+      }
 
+      for (int i = 0; i < this->stat.hour_hit_rate_so_far.size(); i++) {
+
+         os << "  <hitratesofar hour=\"" << i << "\">"
+            << this->stat.hour_hit_rate_so_far[i]
+            << "</hitratesofar>" << endl;
+      }
 
       os << " </" << this->cache_cont->getAlgorithm() << ">" << endl;
 

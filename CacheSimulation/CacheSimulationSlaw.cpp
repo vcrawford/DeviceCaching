@@ -65,9 +65,8 @@ int main(int argc, char** argv) {
    // epsilon for greedy
    double epsilon = stof(argv[7]);
 
-   // what portion of the bottom 90% of files should be moving to the top 10%
-   // of files per day
-   double evolve_portion = stof(argv[8]);
+   // what number of files should be moving from the bottom 
+   int evolve_num = stoi(argv[8]);
 
    // day that we start on (to not overlap with contact graph days)
    int start_day = stoi(argv[9]);
@@ -122,7 +121,7 @@ int main(int argc, char** argv) {
 
       for (int i = 0; i < 2; i++) {
 
-         clog << endl << "Beginning simulation for algorithm " << algs[i] << endl;
+         cout << endl << "Beginning simulation for algorithm " << algs[i] << endl;
  
          // read in contact graph from file
 
@@ -143,7 +142,7 @@ int main(int argc, char** argv) {
          if (algs[i] == "greedy") {
 
             sim.reset(new D2DInstance (n, m, zipf, graph, cache_size, epsilon, radius,
-               thresholds, cache_hit_rates, loc, evolve, evolve_portion, algs[i], seed));
+               thresholds, cache_hit_rates, loc, evolve, evolve_num, algs[i], seed));
            
          }
          else if (algs[i] == "random1") {
@@ -186,9 +185,11 @@ int main(int argc, char** argv) {
 
       cout << "Running multi file caching experiments ..." << endl;
 
-      string algs [4] = {"greedy", "maxhitrate", "topfiles", "request"};
+      string algs [5] = {"greedy", "maxhitrate", "topfiles", "request", "none"};
 
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 5; i++) {
+
+         cout << endl << "Beginning simulation for algorithm " << algs[i] << endl;
  
          // read in contact graph from file
 
@@ -207,18 +208,19 @@ int main(int argc, char** argv) {
          if (algs[i] == "greedy") {
 
             sim.reset(new D2DInstance (n, m, zipf, graph, cache_size, epsilon, radius,
-               thresholds, cache_hit_rates, loc, evolve, evolve_portion, algs[i], seed));
+               thresholds, cache_hit_rates, loc, evolve, evolve_num, algs[i], seed));
            
          }
          else if (algs[i] == "maxhitrate") {
 
             sim.reset(new D2DInstance (n, m, zipf, graph, cache_size, radius,
-               loc, evolve, evolve_portion, algs[i], seed));
+               loc, evolve, evolve_num, algs[i], seed));
          }
-         else if ((algs[i] == "topfiles") || (algs[i] == "request")) {
+         else if ((algs[i] == "topfiles") || (algs[i] == "request") ||
+            (algs[i] == "none")) {
 
             sim.reset(new D2DInstance (n, m, zipf, cache_size, radius,
-               loc, evolve, evolve_portion, algs[i], seed));
+               loc, evolve, evolve_num, algs[i], seed));
          }
 
          int time = 0;
@@ -237,7 +239,7 @@ int main(int argc, char** argv) {
 
          sim->printMultiFileResults(output);
 
-         clog << "Results appended to file " << results_file << endl;
+         clog << "Results appended to file " << results_file << endl << endl;
 
       }
    }
