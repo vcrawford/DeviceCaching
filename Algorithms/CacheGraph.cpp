@@ -143,6 +143,20 @@ class CacheGraph {
 
       }
 
+      // get the cache nodes
+      void getCacheNodes(vector<int>& nodes) const {
+
+         nodes.clear();
+
+         for (int i = 0; i < this->cache_nodes.size(); i++) {
+
+            if (this->cache_nodes[i]) {
+
+               nodes.push_back(i);
+            }
+         }
+      }
+
 
 };
 
